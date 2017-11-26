@@ -418,6 +418,10 @@ struct rsc_table_info {
 #define RPROC_ERR_PARAM                         (RPROC_ERR_BASE -12)
 #define RPROC_ERR_PTR                           (void*)0xDEADBEAF
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /**
  * remoteproc_resource_init
  *
@@ -514,5 +518,9 @@ int remoteproc_boot(struct remote_proc *rproc);
  * @param returns - status of function execution
  */
 int remoteproc_shutdown(struct remote_proc *rproc);
+
+#ifdef __cplusplus
+} // extern "C"
+#endif
 
 #endif				/* REMOTEPROC_H_ */
