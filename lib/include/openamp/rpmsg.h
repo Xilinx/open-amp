@@ -171,6 +171,10 @@ struct rpmsg_endpoint {
 	struct metal_list node;
 };
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 struct rpmsg_endpoint *rpmsg_create_ept(struct rpmsg_channel *rp_chnl,
 					rpmsg_rx_cb_t cb, void *priv,
 					uint32_t addr);
@@ -587,5 +591,9 @@ struct rpmsg_channel *rpmsg_create_channel(struct remote_device *rdev,
  *
  */
 void rpmsg_delete_channel(struct rpmsg_channel *rp_chnl);
+
+#ifdef __cplusplus
+} // extern "C"
+#endif
 
 #endif				/* _RPMSG_H_ */

@@ -200,6 +200,10 @@ struct hil_proc {
 	struct metal_list node;
 };
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /**
  * hil_create_proc
  *
@@ -595,6 +599,10 @@ int hil_set_rpmsg_channel (struct hil_proc *proc, int index,
  */
 int hil_set_vdev_rst_cb (struct hil_proc *proc, int index,
 		hil_proc_vdev_rst_cb_t cb);
+
+#ifdef __cplusplus
+} // extern "C"
+#endif
 
 /**
  *
