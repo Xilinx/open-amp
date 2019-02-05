@@ -12,6 +12,21 @@ find_library(LIBXIL_LIB NAMES xil PATHS ${CMAKE_FIND_ROOT_PATH})
 get_filename_component(LIBXIL_LIB_DIR ${LIBXIL_LIB} DIRECTORY)
 collect(PROJECT_LIB_DIRS ${LIBXIL_LIB_DIR})
 
+# check PM API for certain headers and set client version based
+# on which functions are found
+find_path(VERSION_1_PM_CLIENT "pm_api_sys.h")
+if (NOT VERSION_1_PM_CLIENT)
+  # check for version 2
+  find_path(VERSION_2_PM_CLIENT "xillibpm_api.h")
+  if (NOT VERSION_2_PM_CLIENT)
+    message(FATAL_ERROR "PM Client not found")
+  else()
+   collect (APP_EXTRA_C_FLAGS "  -DVERSION_2_PM_CLIENT ")
+  endif()
+else()
+ collect (APP_EXTRA_C_FLAGS "  -DVERSION_1_PM_CLIENT ")
+endif()
+
 collect(PROJECT_LIB_DEPS xil)
 collect(PROJECT_LIB_DEPS c)
 collect(PROJECT_LIB_DEPS m)
