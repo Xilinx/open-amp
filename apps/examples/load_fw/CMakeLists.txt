@@ -1,5 +1,5 @@
-
-set (_cflags "${CMAKE_C_FLAGS} ${APP_EXTRA_C_FLAGS}")
+collector_list (_app_extra_c_flags APP_EXTRA_C_FLAGS)
+set (_cflags "${CMAKE_C_FLAGS} ${_app_extra_c_flags}")
 set (_fw_dir "${APPS_SHARE_DIR}")
 
 collector_list (_list PROJECT_INC_DIRS)
@@ -14,12 +14,19 @@ get_property (_linker_opt GLOBAL PROPERTY APP_LINKER_OPT)
 collector_list (_deps PROJECT_LIB_DEPS)
 
 set (OPENAMP_LIB open_amp)
+# set default value to LOAD_FW_TARGET if not provided.
+if(NOT LOAD_FW_TARGET)
+   set(LOAD_FW_TARGET "NODE_APU_1")
+endif()
+add_definitions( -DLOAD_FW_TARGET=${LOAD_FW_TARGET} )
 
 foreach (_app load_fw)
   collector_list (_sources APP_COMMON_SOURCES)
   list (APPEND _sources "${CMAKE_CURRENT_SOURCE_DIR}/${_app}.c")
   list (APPEND _sources "${CMAKE_CURRENT_SOURCE_DIR}/mem_image_store.c")
-  list (APPEND _sources "${CMAKE_CURRENT_SOURCE_DIR}/zynqmp_r5_lcm_rproc_example.c")
+  list (APPEND _sources "${CMAKE_CURRENT_SOURCE_DIR}/zynqmp_apu_lcm_rproc_example.c")
+  list (APPEND _sources "${CMAKE_CURRENT_SOURCE_DIR}/zynqmp_rpu_lcm_rproc_example.c")
+  list (APPEND _sources "${CMAKE_CURRENT_SOURCE_DIR}/platform_info.c")
 
   if (WITH_STATIC_LIB)
     add_executable (${_app}.out ${_sources})
