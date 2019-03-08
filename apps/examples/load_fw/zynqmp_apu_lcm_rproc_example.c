@@ -9,13 +9,13 @@
 
 #include <common.h>
 
+
 static struct remoteproc *apu_rproc_init(struct remoteproc *rproc,
 				 struct remoteproc_ops *ops, void *arg)
 {
 	struct rproc_priv *priv;
 	unsigned int cpu_id = *((unsigned int *)arg);
-
-	if (cpu_id < NODE_APU_0 || cpu_id > NODE_APU_3){
+	if(cpu_id < APU_NODE_0 || cpu_id > APU_NODE_1){
 		xil_printf("%s: invalide node id: %d \n\r",__func__, cpu_id);
 		return NULL;
 	}
@@ -65,10 +65,16 @@ static void *apu_rproc_mmap(struct remoteproc *rproc,
 	metal_phys_addr_t lda_end;
 
 	lda_end = lda + size;
-	if (lda_end <= 0x7FFFFFFF)
+	if (lda_end <= 0x7FFFFFFF){
+#ifdef VERSION_2_PM_CLIENT
+		XPm_RequestNode(NODEID_DDR0, XPM_DEF_CAPABILITY, XPM_DEF_QOS, 0);
+		XPm_RequestNode(NODEID_DDR1, XPM_DEF_CAPABILITY, XPM_DEF_QOS, 0);
+	}
+#elif VERSION_1_PM_CLIENT
 		XPm_RequestNode( NODE_DDR,
 			PM_CAP_ACCESS, 0,
 			REQUEST_ACK_BLOCKING);
+	}
 	if (lda >= 0xFFFC0000 && lda < 0xFFFD0000)
 		XPm_RequestNode(NODE_OCM_BANK_0,
 			PM_CAP_ACCESS, 0,
@@ -85,6 +91,7 @@ static void *apu_rproc_mmap(struct remoteproc *rproc,
 		XPm_RequestNode(NODE_OCM_BANK_3,
 			PM_CAP_ACCESS, 0,
 			REQUEST_ACK_BLOCKING);
+#endif /* VERSION_2_PM_CLIENT */
 
 	if (lpa == METAL_BAD_PHYS)
 		lpa = lda;
@@ -117,8 +124,8 @@ static int apu_rproc_start(struct remoteproc *rproc)
 	int ret;
 
 	priv = rproc->priv;
-	ret = XPm_RequestWakeUp(priv->cpu_id, true, rproc->bootaddr,
-			      REQUEST_ACK_BLOCKING);
+	ret = XPm_RequestWakeUp(APU_POWER_CYCLE_NODE_ID(priv->cpu_id), 1,
+		rproc->bootaddr, 1);
 	if (ret != XST_SUCCESS) {
 		LPRINTF("%s: Failed to start APU 0x%x, ret=0x%x\n\r",
 			__func__, priv->cpu_id, ret);
@@ -152,8 +159,14 @@ static int apu_rproc_shutdown(struct remoteproc *rproc)
 		/* Release TCM resource */
 		pa = mem->pa;
 		pa_end = metal_io_phys(mem->io, metal_io_region_size(mem->io));
-		if (pa_end <= 0x7FFFFFFF)
+		if (pa_end <= 0x7FFFFFFF){
+#ifdef VERSION_2_PM_CLIENT
+			XPm_ReleaseNode(NODEID_DDR0);
+			XPm_ReleaseNode(NODEID_DDR1);
+		}
+#else
 			XPm_ReleaseNode(NODE_DDR);
+		}
 		if (pa >= 0xFFFC0000 && pa < 0xFFFD0000)
 			XPm_ReleaseNode(NODE_OCM_BANK_0);
 		if (pa <= 0xFFFDFFFF && pa_end >= 0xFFFD0000)
@@ -162,13 +175,14 @@ static int apu_rproc_shutdown(struct remoteproc *rproc)
 			XPm_ReleaseNode(NODE_OCM_BANK_2);
 		if (pa_end >= 0xFFFF0000)
 			XPm_ReleaseNode(NODE_OCM_BANK_3);
+#endif /* VERSION_2_PM_CLIENT */
+
 		node = tmpnode->prev;
 		metal_list_del(tmpnode);
 		metal_free_memory(mem->io);
 		metal_free_memory(mem);
 	}
-
-	ret = XPm_ForcePowerDown(priv->cpu_id, REQUEST_ACK_BLOCKING);
+	ret = XPm_ForcePowerDown(APU_POWER_CYCLE_NODE_ID(priv->cpu_id), 0);
 	if (ret != XST_SUCCESS)
 		return -1;
 	else
