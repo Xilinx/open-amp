@@ -7,8 +7,13 @@
 
 #include <platform_info.h>
 #include <common.h>
-#include <pm_api_sys.h>
 
+#ifdef VERSION_2_PM_CLIENT
+#include <xpm_client_api.h>
+#include <xillibpm_node.h>
+#elif VERSION_1_PM_CLIENT
+#include <pm_api_sys.h>
+#endif /* VERSION_2_PM_CLIENT */
 #if !defined(VERSION_1_PM_CLIENT) && !defined(VERSION_2_PM_CLIENT)
 #error ("missing PM version.")
 #endif
@@ -21,11 +26,16 @@ static struct  remoteproc_ops ops;
 
 static struct remoteproc * platform_create_proc(unsigned int cpu_id){
 	struct remoteproc * rproc;
-
+#ifdef VERSION_2_PM_CLIENT
+	if (XPM_NODEIDX_DEV_ACPU_0 <= LOAD_FW_TARGET && LOAD_FW_TARGET <= XPM_NODEIDX_DEV_ACPU_1)
+		ops = zynqmp_apu_rproc_ops;
+#elif VERSION_1_PM_CLIENT
 	if (NODE_RPU_0 <= LOAD_FW_TARGET && LOAD_FW_TARGET <= NODE_RPU_1)
 		ops = zynqmp_rpu_rproc_ops;
 	else if (NODE_APU_0 <= LOAD_FW_TARGET && LOAD_FW_TARGET <= NODE_APU_3)
 		ops = zynqmp_apu_rproc_ops;
+#endif /* VERSION_2_PM_CLIENT */
+
 	else
 		return NULL;
 
