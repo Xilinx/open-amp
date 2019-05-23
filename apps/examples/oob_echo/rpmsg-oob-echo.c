@@ -21,9 +21,9 @@ This application echoes back data that was sent to it by the master core. */
 #define NUM_MESSAGES_TO_SEND 32
 
 static struct packet {
-    unsigned packet_type;
-    unsigned buffer_index;
-    unsigned packet_length;
+	unsigned packet_type;
+	unsigned buffer_index;
+	unsigned packet_length;
 };
 
 static int demo_status = 0;
@@ -41,7 +41,6 @@ static int shutdown_req = 0;
 static int rpmsg_endpoint_cb(struct rpmsg_endpoint *ept, void *data, size_t len,
 			     uint32_t src, void *priv)
 {
-
 	struct packet * p = (struct packet *)data;
 	struct packet ack_packet;
 
@@ -53,15 +52,15 @@ static int rpmsg_endpoint_cb(struct rpmsg_endpoint *ept, void *data, size_t len,
 	p->packet_type, p->buffer_index, p->packet_length );
 
 	LPRINTF("RPU: Data location at %x \r\n", (unsigned)(TABLE_BASE_ADDRESS+ (BUFFER_SIZE * p->buffer_index)));
-	LPRINTF("RPU: contents of message %x \r\n", *(char*)((TABLE_BASE_ADDRESS+ (BUFFER_SIZE * p->buffer_index))));
+	LPRINTF("RPU: contents of message %s \r\n", (char*)((TABLE_BASE_ADDRESS+ (BUFFER_SIZE * p->buffer_index))));
 	/* notify remote that message is received */
 	ack_packet.packet_type = OUT_OF_BAND | ACK_MSG;
 	if (rpmsg_send(ept, &ack_packet, sizeof(struct packet)) < 0){
-	    LPERROR("RPU rpmsg_send failed\r\n");
+		LPERROR("RPU rpmsg_send failed\r\n");
 		return RPMSG_ERR_PARAM;
 	}
 
-    return RPMSG_SUCCESS;
+	return RPMSG_SUCCESS;
 }
 
 static void rpmsg_service_unbind(struct rpmsg_endpoint *ept)

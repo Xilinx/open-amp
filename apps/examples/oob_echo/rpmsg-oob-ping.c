@@ -12,6 +12,7 @@ This application echoes back data that was sent to it by the master core. */
 #include "rpmsg-echo.h"
 #include <metal/io.h>
 #include <metal/device.h>
+#include <time.h>
 
 #define APP_EPT_ADDR    0
 #define LPRINTF(format, ...) printf(format, ##__VA_ARGS__)
@@ -33,9 +34,9 @@ This application echoes back data that was sent to it by the master core. */
 
 
 static struct packet {
-    unsigned packet_type;
-    unsigned buffer_index;
-    unsigned packet_length;
+	unsigned packet_type;
+	unsigned buffer_index;
+	unsigned packet_length;
 };
 
 
@@ -52,11 +53,11 @@ static struct metal_io_region * large_buffer_io;
 static int setup_buffer(struct packet * p, unsigned buffer_index, unsigned packet_length, void * data){
 	int ret;
 
-    if (buffer_index > NUM_BUFFERS || packet_length > BUFFER_SIZE || !data)
-        LPERROR("send_buffer failed\r\n");
-    p->packet_type = OUT_OF_BAND | DATA_MSG;
-    p->buffer_index = buffer_index;
-    p->packet_length = packet_length;
+	if (buffer_index > NUM_BUFFERS || packet_length > BUFFER_SIZE || !data)
+		LPERROR("send_buffer failed\r\n");
+	p->packet_type = OUT_OF_BAND | DATA_MSG;
+	p->buffer_index = buffer_index;
+	p->packet_length = packet_length;
 	ret = metal_io_block_write(large_buffer_io, (BUFFER_SIZE * buffer_index), data, packet_length);
 	if (ret < 0){
 		LPERROR("Unable to metal_io_block_write()\n");
@@ -64,7 +65,7 @@ static int setup_buffer(struct packet * p, unsigned buffer_index, unsigned packe
 	}
 	LPRINTF("APU copied to large buffer \r\n");
 
-    return 0;
+	return 0;
 }
 
 
@@ -75,20 +76,19 @@ static int rpmsg_endpoint_cb(struct rpmsg_endpoint *ept, void *data, size_t len,
 			     uint32_t src, void *priv)
 {
 	(void)priv;
-    (void)src;
-    (void)len;
+	(void)src;
+	(void)len;
 	(void)ept;
 
 	struct packet * p = (struct packet *)data;
 
-    LPRINTF("APU  message is received.\r\n" );
-    LPRINTF("APU message contents : packet_type %x buffer_index %x packet_length %x\r\n", 
-        p->packet_type, p->buffer_index, p->packet_length );
+	LPRINTF("APU  message is received.\r\n" );
+	LPRINTF("APU message contents : packet_type %x buffer_index %x packet_length %x\r\n", 
+		p->packet_type, p->buffer_index, p->packet_length );
 	if (p->packet_type & ACK_MSG){
 		LPRINTF("APU received ACK_MSG");
 	}
-    return RPMSG_SUCCESS;
-
+	return RPMSG_SUCCESS;
 }
 
 static void rpmsg_service_unbind(struct rpmsg_endpoint *ept)
@@ -119,12 +119,11 @@ static void rpmsg_name_service_bind_cb(struct rpmsg_device *rdev,
 int app (struct rpmsg_device *rdev, void *priv)
 {
 	int ret;
-	
-
+	clock_t t;
 	/* Create RPMsg endpoint */
 	ret = rpmsg_create_ept(&lept, rdev, RPMSG_SERVICE_NAME, APP_EPT_ADDR,
-			       RPMSG_ADDR_ANY,
-			       rpmsg_endpoint_cb, rpmsg_service_unbind);
+				   RPMSG_ADDR_ANY,
+				   rpmsg_endpoint_cb, rpmsg_service_unbind);
 
 	if (ret) {
 		LPERROR("Failed to create RPMsg endpoint.\r\n");
@@ -132,14 +131,14 @@ int app (struct rpmsg_device *rdev, void *priv)
 	}
 	while (!is_rpmsg_ept_ready(&lept))
 		platform_poll(priv);
-	
+
 	struct packet * p;
 	p = (struct packet *)metal_allocate_memory(sizeof(struct packet));
 	if (!p){
 		LPERROR("memory allocation failed for packet.\r\n");
 		return -1;
 	}
-	
+
 	large_buffer = metal_allocate_memory(sizeof(BUFFER_SIZE*sizeof(char)));
 	if (!large_buffer){
 		LPERROR("memory allocation failed for packet.\r\n");
@@ -148,8 +147,9 @@ int app (struct rpmsg_device *rdev, void *priv)
 
 	LPRINTF("APU begin demo \r\n");
 	for(int number_messages_sent = 0; number_messages_sent < 3;  number_messages_sent++) {
-		*data_to_send = number_messages_sent;
-		LPRINTF("APU: contents of message %i \r\n", number_messages_sent);
+		t = clock();
+		*data_to_send = (unsigned long)clock();
+		LPRINTF("APU: contents of message %x \r\n", number_messages_sent);
 
 		ret = setup_buffer(p, number_messages_sent % NUM_BUFFERS, sizeof(data_to_send), data_to_send);
 		if (ret){
@@ -165,7 +165,7 @@ int app (struct rpmsg_device *rdev, void *priv)
 
 	}
 	LPRINTF("APU side ending demo \r\n");
-   	metal_free_memory(p);
+	metal_free_memory(p);
 
 	rpmsg_destroy_ept(&lept);
 
