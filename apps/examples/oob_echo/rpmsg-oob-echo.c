@@ -7,7 +7,6 @@ This application echoes back data that was sent to it by the master core. */
 #include <metal/alloc.h>
 #include "platform_info.h"
 #include "rpmsg-echo.h"
-//#include "xil_printf.h"
 
 #define OUT_OF_BAND (0x1UL<<31)
 #define INIT_MSG 0x2UL
@@ -26,7 +25,6 @@ static struct packet {
 	unsigned packet_length;
 };
 
-static int demo_status = 0;
 
 #define LPRINTF(format, ...) printf(format, ##__VA_ARGS__)
 //#define LPRINTF(format, ...)
@@ -47,8 +45,8 @@ static int rpmsg_endpoint_cb(struct rpmsg_endpoint *ept, void *data, size_t len,
 	(void)priv;
 	(void)src;
 	(void)len;
-	LPRINTF("RPU message is received.\r\n" );
-	LPRINTF("RPU message contents : packet_type %x buffer_index %x packet_length %x\r\n", 
+	LPRINTF("RPU: message is received.\r\n" );
+	LPRINTF("RPU: message contents : packet_type %x buffer_index %x packet_length %x\r\n",
 	p->packet_type, p->buffer_index, p->packet_length );
 
 	LPRINTF("RPU: Data location at %x \r\n", (unsigned)(TABLE_BASE_ADDRESS+ (BUFFER_SIZE * p->buffer_index)));
@@ -58,7 +56,8 @@ static int rpmsg_endpoint_cb(struct rpmsg_endpoint *ept, void *data, size_t len,
 	if (rpmsg_send(ept, &ack_packet, sizeof(struct packet)) < 0){
 		LPERROR("RPU rpmsg_send failed\r\n");
 		return RPMSG_ERR_PARAM;
-	}
+	} else
+		LPRINTF("RPU: sent ack to APU \r\n");
 
 	return RPMSG_SUCCESS;
 }

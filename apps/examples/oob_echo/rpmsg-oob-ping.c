@@ -12,7 +12,6 @@ This application echoes back data that was sent to it by the master core. */
 #include "rpmsg-echo.h"
 #include <metal/io.h>
 #include <metal/device.h>
-#include <time.h>
 
 #define APP_EPT_ADDR    0
 #define LPRINTF(format, ...) printf(format, ##__VA_ARGS__)
@@ -43,12 +42,14 @@ static struct packet {
 static void* large_buffer;
 
 static char data_to_send[BUFFER_SIZE];
+static const char* message_string = "Out of Band Message contents : ";
 /* Globals */
 static struct rpmsg_endpoint lept;
 static int ept_deleted = 0;
 
 static struct metal_device *large_buffer_shm_device;
 static struct metal_io_region * large_buffer_io;
+static int msg_received = 0;
 
 static int setup_buffer(struct packet * p, unsigned buffer_index, unsigned packet_length, void * data){
 	int ret;
@@ -83,6 +84,7 @@ static int rpmsg_endpoint_cb(struct rpmsg_endpoint *ept, void *data, size_t len,
 	struct packet * p = (struct packet *)data;
 
 	LPRINTF("APU  message is received.\r\n" );
+	msg_received = 1;
 	LPRINTF("APU message contents : packet_type %x buffer_index %x packet_length %x\r\n", 
 		p->packet_type, p->buffer_index, p->packet_length );
 	if (p->packet_type & ACK_MSG){
@@ -119,7 +121,6 @@ static void rpmsg_name_service_bind_cb(struct rpmsg_device *rdev,
 int app (struct rpmsg_device *rdev, void *priv)
 {
 	int ret;
-	clock_t t;
 	/* Create RPMsg endpoint */
 	ret = rpmsg_create_ept(&lept, rdev, RPMSG_SERVICE_NAME, APP_EPT_ADDR,
 				   RPMSG_ADDR_ANY,
@@ -146,10 +147,10 @@ int app (struct rpmsg_device *rdev, void *priv)
 	}
 
 	LPRINTF("APU begin demo \r\n");
-	for(int number_messages_sent = 0; number_messages_sent < 3;  number_messages_sent++) {
-		t = clock();
-		*data_to_send = (unsigned long)clock();
-		LPRINTF("APU: contents of message %x \r\n", number_messages_sent);
+	for(int number_messages_sent = 0; number_messages_sent < NUM_MESSAGES_TO_SEND;  number_messages_sent++) {
+		msg_received = 0;
+		strcpy(data_to_send, message_string);
+		LPRINTF("APU: contents of message %s \r\n", data_to_send);
 
 		ret = setup_buffer(p, number_messages_sent % NUM_BUFFERS, sizeof(data_to_send), data_to_send);
 		if (ret){
@@ -161,7 +162,9 @@ int app (struct rpmsg_device *rdev, void *priv)
 			LPERROR("rpmsg_send failed\r\n");
 			return RPMSG_ERR_PARAM;
 		}
-		sleep(2);
+		do {
+			platform_poll(priv);
+		} while (number_messages_sent < NUM_MESSAGES_TO_SEND && !ept_deleted && !msg_received);
 
 	}
 	LPRINTF("APU side ending demo \r\n");
