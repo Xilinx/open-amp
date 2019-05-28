@@ -18,6 +18,5 @@ static struct packet {
 };
 
 #define LPRINTF(format, ...) printf(format, ##__VA_ARGS__)
-//#define LPRINTF(format, ...)
 #define LPERROR(format, ...) LPRINTF("ERROR: " format, ##__VA_ARGS__)
 #endif /* RPMSG_ECHO_H */
