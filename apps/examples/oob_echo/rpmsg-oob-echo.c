@@ -8,28 +8,6 @@ This application echoes back data that was sent to it by the master core. */
 #include "platform_info.h"
 #include "rpmsg-echo.h"
 
-#define OUT_OF_BAND (0x1UL<<31)
-#define INIT_MSG 0x2UL
-#define ACK_MSG 0X3UL
-#define DATA_MSG 0x4UL
-#define SHUTDOWN_MSG 0x5UL
-
-#define TABLE_BASE_ADDRESS 0x3ee20000UL
-#define BUFFER_SIZE 0x10000UL //64K.. can change to 65K as needed
-#define NUM_BUFFERS 16
-#define NUM_MESSAGES_TO_SEND 32
-
-static struct packet {
-	unsigned packet_type;
-	unsigned buffer_index;
-	unsigned packet_length;
-};
-
-
-#define LPRINTF(format, ...) printf(format, ##__VA_ARGS__)
-//#define LPRINTF(format, ...)
-#define LPERROR(format, ...) LPRINTF("ERROR: " format, ##__VA_ARGS__)
-
 static struct rpmsg_endpoint lept;
 static int shutdown_req = 0;
 
