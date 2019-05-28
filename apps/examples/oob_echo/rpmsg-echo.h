@@ -12,9 +12,9 @@
 #define BUFFER_SIZE 0x10000UL //64K.. can change to 65K as needed
 
 static struct packet {
-    unsigned packet_type;
-    unsigned buffer_index;
-    unsigned packet_length;
+    unsigned int packet_type;
+    unsigned int buffer_index;
+    unsigned int packet_length;
 };
 
 #define LPRINTF(format, ...) printf(format, ##__VA_ARGS__)
