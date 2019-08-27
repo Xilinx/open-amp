@@ -13,7 +13,7 @@
 #include "platform_info.h"
 #include "rpmsg-rpc-demo.h"
 
-#define RPC_BUFF_SIZE 496
+#define RPC_BUFF_SIZE 1024
 #define REDEF_O_CREAT 100
 #define REDEF_O_EXCL 200
 #define REDEF_O_RDONLY 0
@@ -115,7 +115,7 @@ static int handle_read(struct rpmsg_rpc_syscall *syscall,
 	unsigned char buf[RPC_BUFF_SIZE];
 	unsigned char *payload;
 	int bytes_read, payload_size;
-	int ret;
+	int ret, count;
 
 	if (!syscall || !ept)
 		return -EINVAL;
@@ -128,8 +128,11 @@ static int handle_read(struct rpmsg_rpc_syscall *syscall,
 				  bytes_read);
 	} else {
 		/* Perform read from fd */
-		bytes_read = read(syscall->args.int_field1, payload,
-				  syscall->args.int_field2);
+		count = syscall->args.int_field2 < (RPC_BUFF_SIZE-sizeof(*resp)) ?
+			syscall->args.int_field2 :
+			(RPC_BUFF_SIZE-sizeof(*resp)) ;
+
+		bytes_read = read(syscall->args.int_field1, payload, count) ;
 	}
 
 	/* Construct rpc response */
