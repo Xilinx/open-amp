@@ -65,12 +65,21 @@ static void *apu_rproc_mmap(struct remoteproc *rproc,
 	metal_phys_addr_t lda_end;
 
 	lda_end = lda + size;
-	if (lda_end <= 0x7FFFFFFF){
 #ifdef VERSION_2_PM_CLIENT
+	if (lda_end <= 0x7FFFFFFF){
 		XPm_RequestNode(NODEID_DDR0, XPM_DEF_CAPABILITY, XPM_DEF_QOS, 0);
 		XPm_RequestNode(NODEID_DDR1, XPM_DEF_CAPABILITY, XPM_DEF_QOS, 0);
+
 	}
+	if (lda >= 0xFFFC0000 && lda < 0xFFFD0000){
+		XPm_RequestNode(NODEID_OCM0, XPM_DEF_CAPABILITY, XPM_DEF_QOS, 0);
+	}
+	if (lda <= 0xFFFDFFFF && lda_end >= 0xFFFD0000){
+		XPm_RequestNode(NODEID_OCM1, XPM_DEF_CAPABILITY, XPM_DEF_QOS, 0);
+	}
+
 #elif VERSION_1_PM_CLIENT
+	if (lda_end <= 0x7FFFFFFF){
 		XPm_RequestNode( NODE_DDR,
 			PM_CAP_ACCESS, 0,
 			REQUEST_ACK_BLOCKING);
