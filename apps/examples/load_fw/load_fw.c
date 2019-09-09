@@ -46,6 +46,7 @@ int load_exectuable_block(struct remoteproc *rproc,
 		return ret;
 	}
 	LPRINTF("successfully started the processor\r\n");
+#ifndef RPU_BOOT_LINUX
 	/* ... */
 	asm volatile("wfi");
 	LPRINTF("going to stop the processor\r\n");
@@ -53,9 +54,11 @@ int load_exectuable_block(struct remoteproc *rproc,
 	/* application may want to do some cleanup before shutdown */
 	LPRINTF("going to shutdown the processor\r\n");
 	remoteproc_shutdown(rproc);
+#endif /* RPU_BOOT_LINUX */
 	return 0;
 }
 
+#ifndef RPU_BOOT_LINUX
 int load_exectuable_noblock(struct remoteproc *rproc,
 			     struct image_store_ops *store_ops, void *store,
 			     const char *img_path)
@@ -133,7 +136,7 @@ int load_exectuable_noblock(struct remoteproc *rproc,
 	remoteproc_shutdown(rproc);
 	return 0;
 }
-
+#endif /* RPU_BOOT_LINUX */
 
 int main(void)
 {
@@ -155,7 +158,7 @@ int main(void)
 		remoteproc_shutdown(rproc);
 		return -1;
 	}
-
+#ifndef RPU_BOOT_LINUX
 	ret = load_exectuable_noblock(rproc, &mem_image_store_ops, store,
 				      NULL);
 	if (ret < 0) {
@@ -164,6 +167,7 @@ int main(void)
 		remoteproc_shutdown(rproc);
 		return -1;
 	}
+#endif /* RPU_BOOT_LINUX */
 	remoteproc_remove(rproc);
 	return ret;
 }
