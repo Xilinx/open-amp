@@ -1,3 +1,5 @@
+include(CheckSymbolExists)
+
 collect (APP_COMMON_SOURCES helper.c)
 
 set (_linker_script "${CMAKE_CURRENT_SOURCE_DIR}/linker_remote.ld")
@@ -13,19 +15,17 @@ get_filename_component(LIBXIL_LIB_DIR ${LIBXIL_LIB} DIRECTORY)
 collect(PROJECT_LIB_DIRS ${LIBXIL_LIB_DIR})
 
 # check PM API for certain headers and set client version based
-# on which functions are found
-find_path(VERSION_1_PM_CLIENT "pm_api_sys.h")
-if (NOT VERSION_1_PM_CLIENT)
-  # check for version 2
-  find_path(VERSION_2_PM_CLIENT "xpm_client_api.h")
-  if (NOT VERSION_2_PM_CLIENT)
-    message(FATAL_ERROR "PM Client not found")
+CHECK_SYMBOL_EXISTS(XPAR_XILPM_ENABLED "xparamaters.h" PM_FOUND)
+if(PM_FOUND)
+  find_library(HAS_PM_LIB NAMES xilpm PATHS ${CMAKE_FIND_ROOT_PATH})
+  collect (PROJECT_LIB_DEPS xilpm)
+  CHECK_SYMBOL_EXISTS(versal "xparamaters.h" VERSION_2_PM_CLIENT)
+  if (VERSION_2_PM_CLIENT)
+    collect (APP_EXTRA_C_FLAGS "  -DVERSION_2_PM_CLIENT ")
   else()
-   collect (APP_EXTRA_C_FLAGS "  -DVERSION_2_PM_CLIENT ")
-  endif()
-else()
- collect (APP_EXTRA_C_FLAGS "  -DVERSION_1_PM_CLIENT ")
-endif()
+    collect (APP_EXTRA_C_FLAGS "  -DVERSION_1_PM_CLIENT ")
+  endif(VERSION_2_PM_CLIENT)
+endif(PM_FOUND)
 
 collect(PROJECT_LIB_DEPS xil)
 collect(PROJECT_LIB_DEPS c)
@@ -34,11 +34,3 @@ find_library(XILMEM_LIB NAMES xilmem PATHS ${CMAKE_FIND_ROOT_PATH})
 if(XILMEM_LIB)
   collect (PROJECT_LIB_DEPS xilmem)
 endif(XILMEM_LIB)
-
-if (VERSION_2_PM_CLIENT)
-find_library(HAS_PM_LIB NAMES xillibpm PATHS ${CMAKE_FIND_ROOT_PATH})
-collect (PROJECT_LIB_DEPS xillibpm)
-else()
-find_library(HAS_PM_LIB NAMES xilpm PATHS ${CMAKE_FIND_ROOT_PATH})
-collect (PROJECT_LIB_DEPS xilpm)
-endif(VERSION_2_PM_CLIENT)
