@@ -17,31 +17,83 @@
 #include <stdarg.h>
 #include <stdio.h>
 /* Xilinx headers */
-#ifdef VERSION_2_PM_CLIENT
-#include <xillibpm_node.h>
-#include <xpm_client_api.h>
-#define NODEID_DDR0 NODEID(XPM_NODECLASS_DEVICE, XPM_NODESUBCL_DEV_MEM, XPM_NODETYPE_DEV_DDR, XPM_NODEIDX_DEV_DDR_0)
-#define NODEID_DDR1 NODEID(XPM_NODECLASS_DEVICE, XPM_NODESUBCL_DEV_MEM, XPM_NODETYPE_DEV_DDR, XPM_NODEIDX_DEV_DDR_1)
-#define NODEID_OCM0	NODEID(XPM_NODECLASS_DEVICE, XPM_NODESUBCL_DEV_MEM, XPM_NODETYPE_DEV_OCM, XPM_NODEIDX_DEV_OCM_0)
-#define NODEID_OCM1	NODEID(XPM_NODECLASS_DEVICE, XPM_NODESUBCL_DEV_MEM, XPM_NODETYPE_DEV_OCM, XPM_NODEIDX_DEV_OCM_1)
-
-#define APU_DEVID(IDX)	NODEID(XPM_NODECLASS_DEVICE, \
-						XPM_NODESUBCL_DEV_CORE, \
-						XPM_NODETYPE_DEV_CORE_APU, (IDX))
-#define APU_NODE_0 XPM_NODEIDX_DEV_ACPU_0
-#define APU_NODE_1 XPM_NODEIDX_DEV_ACPU_1
-#define APU_POWER_CYCLE_NODE_ID(IDX) APU_DEVID(IDX)
-#elif VERSION_1_PM_CLIENT
 #include <pm_api_sys.h>
-#include <pm_defs.h>
-#define APU_NODE_0 NODE_APU_0
-#define APU_NODE_1 NODE_APU_3
-#define APU_POWER_CYCLE_NODE_ID(IDX) (IDX)
-#endif /* VERSION_2_PM_CLIENT */
-
 #include <xil_mpu.h>
 #include <xil_printf.h>
 #include <xreg_cortexr5.h>
+
+#ifdef versal
+#include <xpm_nodeid.h>
+#include <xpm_defs.h>
+
+#ifndef NODE_APU_0
+#define NODE_APU_0			PM_DEV_ACPU_0
+#endif
+#ifndef NODE_APU_1
+#define NODE_APU_1			PM_DEV_ACPU_1
+#endif
+#ifndef NODE_RPU_0
+#define NODE_RPU_0			PM_DEV_RPU0_0
+#endif
+#ifndef NODE_RPU
+#define NODE_RPU			PM_DEV_RPU0_0
+#endif
+
+#ifndef NODE_RPU_1
+#define NODE_RPU_1			PM_DEV_RPU0_1
+#endif
+
+#ifndef NODE_TCM_0_A
+#define NODE_TCM_0_A PM_DEV_TCM_0_A
+#endif
+#ifndef NODE_TCM_0_B
+#define NODE_TCM_0_B PM_DEV_TCM_0_B
+#endif
+#ifndef NODE_TCM_1_A
+#define NODE_TCM_1_A PM_DEV_TCM_1_A
+#endif
+#ifndef NODE_TCM_1_B
+#define NODE_TCM_1_B PM_DEV_TCM_1_B
+#endif
+
+#ifndef NODE_DDR
+#define NODE_DDR			PM_DEV_DDR_0
+#endif
+
+#ifndef NODE_OCM_BANK_0
+#define NODE_OCM_BANK_0			PM_DEV_OCM_0
+#endif
+#ifndef NODE_OCM_BANK_1
+#define NODE_OCM_BANK_1			PM_DEV_OCM_1
+#endif
+#ifndef NODE_OCM_BANK_2
+#define NODE_OCM_BANK_2			PM_DEV_OCM_2
+#endif
+#ifndef NODE_OCM_BANK_3
+#define NODE_OCM_BANK_3			PM_DEV_OCM_3
+#endif
+
+/* Requirement limits */
+#define XPM_MAX_CAPABILITY (PM_CAP_ACCESS | PM_CAP_CONTEXT | PM_CAP_WAKEUP)
+#define XPM_MAX_LATENCY        (0xFFFFU)
+#define XPM_MAX_QOS            (100)
+#define XPM_MIN_CAPABILITY (0)
+#define XPM_MIN_LATENCY        (0)
+#define XPM_MIN_QOS            (0)
+#define XPM_DEF_CAPABILITY XPM_MAX_CAPABILITY
+#define XPM_DEF_LATENCY        XPM_MAX_LATENCY
+#define XPM_DEF_QOS            XPM_MAX_QOS
+
+enum XPmRequestAck {
+    REQUEST_ACK_NO = 1,
+    REQUEST_ACK_BLOCKING,
+    REQUEST_ACK_NON_BLOCKING,
+    REQUEST_ACK_CB_CERROR,
+};
+
+#else /* zynqmp */
+#include <pm_defs.h>
+#endif /* versal */
 
 #define LPRINTF(format, ...) xil_printf(format, ##__VA_ARGS__)
 //#define LPRINTF(format, ...)
