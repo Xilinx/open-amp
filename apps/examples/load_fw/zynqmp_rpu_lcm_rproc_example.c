@@ -66,38 +66,36 @@ static void *rpu_rproc_mmap(struct remoteproc *rproc,
 	metal_phys_addr_t lda_end;
 
 	lda_end = lda + size;
-	if (priv->cpu_id == NODE_RPU_0) {
-		if (lda < 0x10000)
-			XPm_RequestNode(NODE_TCM_0_A,
-					PM_CAP_ACCESS, 0,
-					REQUEST_ACK_BLOCKING);
-		if (lda <= 0x20000 && lda_end >= 0x10000)
-			XPm_RequestNode(NODE_TCM_1_A,
-					PM_CAP_ACCESS, 0,
-					REQUEST_ACK_BLOCKING);
-		if (lda <= 0x30000 && lda_end >= 0x20000)
-			XPm_RequestNode(NODE_TCM_0_B,
-					PM_CAP_ACCESS, 0,
-					REQUEST_ACK_BLOCKING);
-		if (lda <= 0x40000 && lda_end >= 0x30000)
-			XPm_RequestNode(NODE_TCM_1_B,
-					PM_CAP_ACCESS, 0,
-					REQUEST_ACK_BLOCKING);
-	} else if (priv->cpu_id == NODE_RPU_1) {
-		lpa = 0xFFE90000 + lda;
-		if (lda < 0x10000)
-			XPm_RequestNode(NODE_TCM_1_A,
-					PM_CAP_ACCESS, 0,
-					REQUEST_ACK_BLOCKING);
-		if (lda <= 0x30000 && lda_end >= 0x20000)
-			XPm_RequestNode(NODE_TCM_1_B,
-					PM_CAP_ACCESS, 0,
-					REQUEST_ACK_BLOCKING);
-	} else {
-		LPERROR("mmap failed: invalid cpu node: %d\n",
-			priv->cpu_id);
-		return NULL;
+	/* call xilpm request node for relevant memory */
+	if (lda <= 0x40000) {
+		if (priv->cpu_id == NODE_RPU_0 || priv->cpu_id == NODE_RPU) {
+			lpa = 0xFFE00000 + lda;
+			if (lda < 0x10000)
+				XPm_RequestNode(NODE_TCM_0_A,PM_CAP_ACCESS,
+					XPM_MIN_QOS,REQUEST_ACK_NO);
+			if (lda <= 0x20000 && lda_end >= 0x10000)
+				XPm_RequestNode(NODE_TCM_1_A,PM_CAP_ACCESS,
+					XPM_MIN_QOS,REQUEST_ACK_NO);
+			if (lda <= 0x30000 && lda_end >= 0x20000)
+				XPm_RequestNode(NODE_TCM_0_B,PM_CAP_ACCESS,
+					XPM_MIN_QOS,REQUEST_ACK_NO);
+			if (lda <= 0x40000 && lda_end >= 0x30000)
+				XPm_RequestNode(NODE_TCM_1_B,PM_CAP_ACCESS,
+					XPM_MIN_QOS,REQUEST_ACK_NO);
+		} else if (priv->cpu_id == NODE_RPU_1) {
+			lpa = 0xFFE90000 + lda;
+			if (lda < 0x10000)
+				XPm_RequestNode(NODE_TCM_1_A,PM_CAP_ACCESS,
+					XPM_MIN_QOS,REQUEST_ACK_NO);
+			if (lda <= 0x30000 && lda_end >= 0x20000)
+				XPm_RequestNode(NODE_TCM_1_B,PM_CAP_ACCESS,
+					XPM_MIN_QOS,REQUEST_ACK_NO);
+		} else {
+			LPERROR("mmap failed: invalid cpu node: %d\r\n", priv->cpu_id);
+			return NULL;
+		}
 	}
+
 	if (lpa == METAL_BAD_PHYS)
 		lpa = lda;
 	if (lpa == METAL_BAD_PHYS)
@@ -130,7 +128,7 @@ static int rpu_rproc_start(struct remoteproc *rproc)
 
 	priv = rproc->priv;
 	ret = XPm_RequestWakeUp(priv->cpu_id, true, rproc->bootaddr,
-			      REQUEST_ACK_BLOCKING);
+			REQUEST_ACK_NO);
 	if (ret != XST_SUCCESS) {
 		LPRINTF("%s: Failed to start RPU 0x%x, ret=0x%x\n\r",
 			__func__, priv->cpu_id, ret);
@@ -165,25 +163,35 @@ static int rpu_rproc_shutdown(struct remoteproc *rproc)
 		/* Release TCM resource */
 		pa = mem->pa;
 		pa_end = metal_io_phys(mem->io, metal_io_region_size(mem->io));
-		if (pa >= 0XFFE00000 && pa < 0xFFE10000)
-			XPm_ReleaseNode(NODE_TCM_0_A);
-		if (pa < 0xFFE20000 && pa_end >= 0xFFE10000)
-			XPm_ReleaseNode(NODE_TCM_1_A);
-		if (pa <= 0xFFE30000 && pa_end >= 0xFFE20000)
-			XPm_ReleaseNode(NODE_TCM_0_B);
-		if (pa <= 0xFFE40000 && pa_end >= 0xFFE30000)
-			XPm_ReleaseNode(NODE_TCM_1_B);
-		if (pa < 0xFFEA0000)
-			XPm_ReleaseNode(NODE_TCM_1_A);
-		if (pa <= 0xFFC0000 && pa_end >= 0xFFEB0000)
-			XPm_ReleaseNode(NODE_TCM_1_B);
 		node = tmpnode->prev;
 		metal_list_del(tmpnode);
 		metal_free_memory(mem->io);
 		metal_free_memory(mem);
+		/* call xilpm release node for relevant memory */
+		if (pa <= 0x40000) {
+			if (priv->cpu_id == NODE_RPU_0 || priv->cpu_id == NODE_RPU) {
+				if (pa < 0x10000)
+					XPm_ReleaseNode(NODE_TCM_0_A);
+				if (pa <= 0x20000 && pa_end >= 0x10000)
+					XPm_ReleaseNode(NODE_TCM_1_A);
+				if (pa <= 0x30000 && pa_end >= 0x20000)
+					XPm_ReleaseNode(NODE_TCM_0_B);
+				if (pa <= 0x40000 && pa_end >= 0x30000)
+					XPm_ReleaseNode(NODE_TCM_1_B);
+			} else if (priv->cpu_id == NODE_RPU_1) {
+				if (pa < 0x10000)
+					XPm_ReleaseNode(NODE_TCM_1_A);
+				if (pa <= 0x30000 && pa_end >= 0x20000)
+					XPm_ReleaseNode(NODE_TCM_1_B);
+			} else {
+				LPERROR("unmap failed: invalid cpu node: %d\r\n", priv->cpu_id);
+				return NULL;
+			}
+		}
+
 	}
 
-	ret = XPm_ForcePowerDown(priv->cpu_id, REQUEST_ACK_BLOCKING);
+	ret = XPm_ForcePowerDown(priv->cpu_id, REQUEST_ACK_NO);
 	if (ret != XST_SUCCESS)
 		return -1;
 	else
