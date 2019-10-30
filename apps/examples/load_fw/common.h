@@ -93,6 +93,8 @@ enum XPmRequestAck {
 
 #else /* zynqmp */
 #include <pm_defs.h>
+#define XPM_MAX_QOS            MAX_QOS
+#define XPM_MIN_QOS            (0)
 #endif /* versal */
 
 #define LPRINTF(format, ...) xil_printf(format, ##__VA_ARGS__)
