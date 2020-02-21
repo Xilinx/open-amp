@@ -49,11 +49,11 @@ static int zynqmp_linux_r5_proc_irq_handler(int vect_id, void *data)
     if (!rproc)
         return METAL_IRQ_NOT_HANDLED;
     prproc = rproc->priv;
-    ipi_intr_status = (unsigned int)metal_io_read32(prproc->ipi_io,
+    ipi_intr_status = (unsigned int)metal_io_read32(prproc->poll_io,
                             IPI_ISR_OFFSET);
     if (ipi_intr_status & prproc->ipi_chn_mask) {
         atomic_flag_clear(&prproc->ipi_nokick);
-        metal_io_write32(prproc->ipi_io, IPI_ISR_OFFSET,
+        metal_io_write32(prproc->poll_io, IPI_ISR_OFFSET,
                  prproc->ipi_chn_mask);
         return METAL_IRQ_HANDLED;
     }
@@ -74,7 +74,7 @@ zynqmp_linux_r5_proc_init(struct remoteproc *rproc,
         return NULL;
     rproc->priv = prproc;
     rproc->ops = ops;
-    prproc->ipi_dev = NULL;
+    prproc->poll_dev = NULL;
     prproc->shm_dev = NULL;
     /* Get shared memory device */
     ret = metal_device_open(prproc->shm_bus_name, prproc->shm_name,
@@ -94,30 +94,35 @@ zynqmp_linux_r5_proc_init(struct remoteproc *rproc,
                 prproc->shm_io);
     remoteproc_add_mem(rproc, &prproc->shm_mem);
     printf("Successfully added shared memory\r\n");
-    /* Get IPI device */
-    ret = metal_device_open(prproc->ipi_bus_name, prproc->ipi_name,
+    /* Get Polling device */
+    ret = metal_device_open(prproc->poll_bus_name, prproc->poll_name,
                 &dev);
     if (ret) {
         printf("failed to open ipi device: %d.\r\n", ret);
         goto err2;
     }
-    prproc->ipi_dev = dev;
-    prproc->ipi_io = metal_device_io_region(dev, 0);
-    if (!prproc->ipi_io)
+    prproc->poll_dev = dev;
+    prproc->poll_io = metal_device_io_region(dev, 0);
+    if (!prproc->poll_io)
         goto err3;
-    printf("Successfully probed IPI device\r\n");
+    printf("Successfully probed Polling device\r\n");
+#ifdef RPMSG_NO_IPI
+	metal_io_write32(prproc->poll_io, 0, !POLL_STOP);
+#else
     atomic_store(&prproc->ipi_nokick, 1);
-
     /* Register interrupt handler and enable interrupt */
     irq_vect = (uintptr_t)dev->irq_info;
     metal_irq_register(irq_vect, zynqmp_linux_r5_proc_irq_handler, rproc);
     metal_irq_enable(irq_vect);
-    metal_io_write32(prproc->ipi_io, IPI_IER_OFFSET,
+    metal_io_write32(prproc->poll_io, IPI_IER_OFFSET,
              prproc->ipi_chn_mask);
+
+#endif /* RPMSG_NO_IPI */
+
     printf("Successfully initialized Linux r5 remoteproc.\r\n");
     return rproc;
 err3:
-    metal_device_close(prproc->ipi_dev);
+    metal_device_close(prproc->poll_dev);
 err2:
     metal_device_close(prproc->shm_dev);
 err1:
@@ -132,8 +137,8 @@ static void zynqmp_linux_r5_proc_remove(struct remoteproc *rproc)
     if (!rproc)
         return;
     prproc = rproc->priv;
-    metal_io_write32(prproc->ipi_io, IPI_IDR_OFFSET, prproc->ipi_chn_mask);
-    dev = prproc->ipi_dev;
+    metal_io_write32(prproc->poll_io, IPI_IDR_OFFSET, prproc->ipi_chn_mask);
+    dev = prproc->poll_dev;
     if (dev) {
         metal_irq_disable((uintptr_t)dev->irq_info);
         metal_irq_unregister((uintptr_t)dev->irq_info);
@@ -186,9 +191,12 @@ static int zynqmp_linux_r5_proc_notify(struct remoteproc *rproc, uint32_t id)
         return -1;
     prproc = rproc->priv;
 
-    /* TODO: use IPI driver instead and pass ID */
-    metal_io_write32(prproc->ipi_io, IPI_TRIG_OFFSET,
+#ifdef RPMSG_NO_IPI
+	metal_io_write32(prproc->poll_io, 0, POLL_STOP);
+#else
+    metal_io_write32(prproc->poll_io, IPI_TRIG_OFFSET,
               prproc->ipi_chn_mask);
+#endif
     return 0;
 }
 

@@ -37,10 +37,10 @@
 #ifdef versal
 #define IPI_CHN_BITMASK     0x08 /* IPI channel bit mask for IPI
 					* from/to RPU0 */
-#define IPI_DEV_NAME        "ff360000.ipi" /* IPI device name */
+#define POLL_DEV_NAME        "ff360000.ipi" /* IPI device name */
 #else
 #define IPI_CHN_BITMASK	    0x00000100
-#define IPI_DEV_NAME	    "ff340000.ipi"
+#define POLL_DEV_NAME	    "ff340000.ipi"
 #endif /* versal */
 #define DEV_BUS_NAME        "platform" /* device bus name. "platform" bus
                                         * is used in Linux kernel for generic
@@ -57,9 +57,14 @@
 #define SHARED_BUF_PA       0x3ED48000UL
 #define SHARED_BUF_SIZE     0x40000UL
 
+#ifdef RPMSG_NO_IPI
+#undef POLL_DEV_NAME
+#define POLL_DEV_NAME        "3ee40000.shm" /* shared device name */
+#endif /* RPMSG_NO_IPI */
+
 struct remoteproc_priv rproc_priv = {
-	.ipi_name = IPI_DEV_NAME,
-	.ipi_bus_name = DEV_BUS_NAME,
+	.poll_name = POLL_DEV_NAME,
+	.poll_bus_name = DEV_BUS_NAME,
 	.ipi_chn_mask = IPI_CHN_BITMASK,
 	.shm_name = SHM_DEV_NAME,
 	.shm_bus_name = DEV_BUS_NAME,
@@ -210,6 +215,12 @@ int platform_poll(void *priv)
 
 	prproc = rproc->priv;
 	while(1) {
+#ifdef RPMSG_NO_IPI
+		if (metal_io_read32(prproc->poll_io, 0)) {
+			remoteproc_get_notification(rproc, RSC_NOTIFY_ID_ANY);
+			break;
+		}
+#else
 		flags = metal_irq_save_disable();
 		if (!(atomic_flag_test_and_set(&prproc->ipi_nokick))) {
 			metal_irq_restore_enable(flags);
@@ -218,6 +229,7 @@ int platform_poll(void *priv)
 		}
 		_rproc_wait();
 		metal_irq_restore_enable(flags);
+#endif /* RPMSG_NO_IPI */
 	}
 	return 0;
 }
