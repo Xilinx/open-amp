@@ -2,6 +2,9 @@
 option (WITH_LOAD_FW "Include loading firmware example" OFF)
 
 add_subdirectory (echo)
+if (MACHINE MATCHES ".*microblaze.*")
+    return()
+endif (MACHINE MATCHES ".*microblaze.*")
 add_subdirectory (oob_echo)
 add_subdirectory (rpmsg_sample_echo)
 add_subdirectory (matrix_multiply)
