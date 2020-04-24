@@ -2,13 +2,13 @@
 
 The microblaze_generic directories in OpenAMP repository provide an
 implementation of remoteproc and rpmsg for Xilinx MicroBlaze design
-example. The design instanciates Xilinx MicroBlaze soft proccesor in
+example. The design instantiates Xilinx MicroBlaze soft processor in
 ZynqMP's programmable logic (PL) and uses the processing system (PS)
 DDR memory for its text and data. The HP0_DDR_LOW is mapped from 0 to
 0x7FFFFFFF. The Local Memory Bus (LMB) is not connected and the LMB
 memory is not present. The MicroBlaze Vector Base Address is set to
 0x70000000 and its reset_mode (01) will force it to enter sleep mode
-without performing any bus access. The design is avalable in the Xilinx
+without performing any bus access. The design is available in the Xilinx
 Shell Archive (XSA) format at https://xilinx-wiki.atlassian.net
 
 ## How to build OpenAMP echo server for the MicroBlaze design example.
@@ -17,7 +17,7 @@ hardware at this time and the MicroBlaze OpenAMP echo server is built
 with RPMSG_NO_IPI flag.
 
 * build the libmetal library on your host as follows:
-  * Create your on cmake toolchain file to compile libmetal for your generic
+  * Create your own cmake toolchain file to compile libmetal for your generic
     (baremetal) platform. Here is an example toolchain file:
 
     ```
@@ -47,7 +47,7 @@ with RPMSG_NO_IPI flag.
     ```
 
 * build the OpenAMP library on your host as follows:
-  * Create your on cmake toolchain file to compile openamp for your generic
+  * Create your own cmake toolchain file to compile openamp for your generic
     (baremetal) platform. Here is an example toolchain file:
     ```
         set (BSP  "/path/to/your_MicroBlaze_design_BSP/dir" CACHE STRING "")
@@ -101,13 +101,13 @@ for the MicroBlaze text and data including vrings. A Yocto overlay
 device tree example: openamp-linux-u-MicroBlaze.dtsi
 
 Build the OpenAMP Linux userspace library and application via Yocto.
-The open-amp and libmetal recipes are in this yocto layer:
+The open-amp and libmetal recipes are in this Yocto layer:
     https://github.com/OpenAMP/meta-openamp
 
-* Add the `meta-openamp` layer to your layers in your yocto build project's
+* Add the `meta-openamp` layer to your layers in your Yocto build project's
   `bblayers.conf` file.
 * Add `libmetal` and `open-amp` to your packages list. E.g. add `libmetal`
   and `open-amp` to the `IMAGE_INSTALL_append` in the `local.conf` file. 
-* You can also add OpenAMP demos Linux applications packages to your yocto
+* You can also add OpenAMP demos Linux applications packages to your Yocto
   packages list. OpenAMP demo examples recipes are also in `meta-openamp`:
   https://github.com/OpenAMP/meta-openamp/tree/master/recipes-openamp/openamp-examples
