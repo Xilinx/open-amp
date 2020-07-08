@@ -11,7 +11,7 @@
 #define TABLE_BASE_ADDRESS 0x3ee20000UL
 #define BUFFER_SIZE 0x10000UL //64K.. can change to 65K as needed
 
-static struct packet {
+struct packet {
     unsigned int packet_type;
     unsigned int buffer_index;
     unsigned int packet_length;
