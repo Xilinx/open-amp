@@ -7,7 +7,7 @@
  * SPDX-License-Identifier: BSD-3-Clause
  */
 
-#include <platform_info.h>
+#include "platform_info.h"
 #include <common.h>
 
 extern struct image_store_ops mem_image_store_ops;
