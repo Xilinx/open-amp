@@ -185,7 +185,7 @@ static int rpu_rproc_shutdown(struct remoteproc *rproc)
 					XPm_ReleaseNode(NODE_TCM_1_B);
 			} else {
 				LPERROR("unmap failed: invalid cpu node: %d\r\n", priv->cpu_id);
-				return NULL;
+				return -EINVAL;
 			}
 		}
 
