@@ -39,8 +39,8 @@
 					* from/to RPU0 */
 #define POLL_DEV_NAME        "ff360000.ipi" /* IPI device name */
 #else
-#define IPI_CHN_BITMASK		0x00000100
-#define POLL_DEV_NAME		"ff340000.ipi"
+#define IPI_CHN_BITMASK	    0x00000100
+#define POLL_DEV_NAME	    "ff340000.ipi"
 #endif /* versal */
 #define DEV_BUS_NAME        "platform" /* device bus name. "platform" bus
                                         * is used in Linux kernel for generic
@@ -50,12 +50,12 @@
  * sys/bus/platform/devices */
 #define SHM_DEV_NAME        "3ed20000.shm" /* shared device name */
 
-#define RSC_MEM_PA 0x3ED20000UL
-#define RSC_MEM_SIZE 0x2000UL
-#define VRING_MEM_PA  0x3ED40000UL
-#define VRING_MEM_SIZE 0x8000UL
-#define SHARED_BUF_PA 0x3ED48000UL
-#define SHARED_BUF_SIZE 0x40000UL
+#define RSC_MEM_PA          0x3ED20000UL
+#define RSC_MEM_SIZE        0x2000UL
+#define VRING_MEM_PA        0x3ED40000UL
+#define VRING_MEM_SIZE      0x8000UL
+#define SHARED_BUF_PA       0x3ED48000UL
+#define SHARED_BUF_SIZE     0x40000UL
 
 #ifdef RPMSG_NO_IPI
 #undef POLL_DEV_NAME

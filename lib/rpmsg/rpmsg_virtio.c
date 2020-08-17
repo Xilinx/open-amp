@@ -143,7 +143,7 @@ static void *rpmsg_virtio_get_tx_buffer(struct rpmsg_virtio_device *rvdev,
 #ifndef VIRTIO_SLAVE_ONLY
 	if (role == RPMSG_MASTER) {
 		data = virtqueue_get_buffer(rvdev->svq, len, idx);
-		if (data == NULL) {
+		if (!data) {
 			data = rpmsg_virtio_shm_pool_get_buffer(rvdev->shpool,
 							RPMSG_BUFFER_SIZE);
 			*len = RPMSG_BUFFER_SIZE;
@@ -214,8 +214,6 @@ static int rpmsg_virtio_wait_remote_ready(struct rpmsg_virtio_device *rvdev)
 		/* TODO: clarify metal_cpu_yield usage*/
 		metal_cpu_yield();
 	}
-
-	return false;
 }
 #endif /*!VIRTIO_MASTER_ONLY*/
 
@@ -310,9 +308,12 @@ static int rpmsg_virtio_send_offchannel_raw(struct rpmsg_device *rdev,
 		/* Lock the device to enable exclusive access to virtqueues */
 		metal_mutex_acquire(&rdev->lock);
 		avail_size = _rpmsg_virtio_get_buffer_size(rvdev);
-		if (size <= avail_size)
-			buffer = rpmsg_virtio_get_tx_buffer(rvdev, &buff_len,
-							    &idx);
+		if (avail_size && size > avail_size) {
+			metal_mutex_release(&rdev->lock);
+			return RPMSG_ERR_BUFF_SIZE;
+		}
+
+		buffer = rpmsg_virtio_get_tx_buffer(rvdev, &buff_len, &idx);
 		metal_mutex_release(&rdev->lock);
 		if (buffer || !tick_count)
 			break;
@@ -338,7 +339,7 @@ static int rpmsg_virtio_send_offchannel_raw(struct rpmsg_device *rdev,
 
 	status = metal_io_block_write(io,
 				      metal_io_virt_to_offset(io,
-				      RPMSG_LOCATE_DATA(buffer)),
+						RPMSG_LOCATE_DATA(buffer)),
 				      data, size);
 	RPMSG_ASSERT(status == size, "failed to write buffer\r\n");
 	metal_mutex_acquire(&rdev->lock);
@@ -421,7 +422,7 @@ static void rpmsg_virtio_rx_callback(struct virtqueue *vq)
 		rpmsg_virtio_return_buffer(rvdev, rp_hdr, len, idx);
 
 		rp_hdr = rpmsg_virtio_get_rx_buffer(rvdev, &len, &idx);
-		if (rp_hdr == NULL) {
+		if (!rp_hdr) {
 			/* tell peer we return some rx buffer */
 			virtqueue_kick(rvdev->rvq);
 		}
@@ -518,7 +519,7 @@ int rpmsg_init_vdev(struct rpmsg_virtio_device *rvdev,
 {
 	struct rpmsg_device *rdev;
 	const char *vq_names[RPMSG_NUM_VRINGS];
-	vq_callback *callback[RPMSG_NUM_VRINGS];
+	vq_callback callback[RPMSG_NUM_VRINGS];
 	int status;
 	unsigned int i, role;
 

@@ -14,7 +14,8 @@ extern struct remoteproc_ops zynqmp_rpu_rproc_ops;
 static struct remoteproc rproc_inst;
 static struct  remoteproc_ops ops;
 
-static struct remoteproc * platform_create_proc(unsigned int cpu_id){
+static struct remoteproc * platform_create_proc(unsigned int cpu_id)
+{
 	struct remoteproc * rproc;
 	if (NODE_RPU_0 <= LOAD_FW_TARGET && LOAD_FW_TARGET <= NODE_RPU_1)
 		ops = zynqmp_rpu_rproc_ops;
@@ -29,13 +30,12 @@ static struct remoteproc * platform_create_proc(unsigned int cpu_id){
 	return &rproc_inst;
 }
 
-
 static void app_log_handler(enum metal_log_level level,
                    const char *format, ...)
 {
 	char msg[1024];
 	va_list args;
-	static const char *level_strs[] = { 
+	static const char *level_strs[] = {
 		"metal: emergency: ",
 		"metal: alert:     ",
 		"metal: critical:  ",
@@ -44,7 +44,7 @@ static void app_log_handler(enum metal_log_level level,
 		"metal: notice:    ",
 		"metal: info:      ",
 		"metal: debug:     ",
-	};  
+	};
 
 	va_start(args, format);
 	vsnprintf(msg, sizeof(msg), format, args);
@@ -69,7 +69,7 @@ static XStatus IpiConfigure(XIpiPsu *const IpiInstPtr)
         Status = XST_FAILURE;
         LPERROR("%s ERROR in getting CfgPtr\n", __func__);
         return Status;
-    }   
+    }
 
     /* Init with the Cfg Data */
     Status = XIpiPsu_CfgInitialize(IpiInstPtr, IpiCfgPtr,
@@ -77,13 +77,12 @@ static XStatus IpiConfigure(XIpiPsu *const IpiInstPtr)
     if (XST_SUCCESS != Status) {
         LPERROR("%s ERROR #%d in configuring IPI\n", __func__, Status);
         return Status;
-    }   
+    }
     return Status;
 }
 
-
 struct remoteproc * app_init(unsigned int cpu_id){
-	struct metal_init_params metal_param = { 
+	struct metal_init_params metal_param = {
 		.log_handler = app_log_handler,
 		.log_level = METAL_LOG_DEBUG,
 	};

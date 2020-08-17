@@ -49,7 +49,7 @@ int handle_rsc_table(struct remoteproc *rproc,
 	}
 
 	/* Reserved fields - must be zero */
-	if ((rsc_table->reserved[0] != 0 || rsc_table->reserved[1]) != 0) {
+	if (rsc_table->reserved[0] != 0 || rsc_table->reserved[1] != 0) {
 		return -RPROC_ERR_RSC_TAB_RSVD;
 	}
 
@@ -70,9 +70,9 @@ int handle_rsc_table(struct remoteproc *rproc,
 		if (status == -RPROC_ERR_RSC_TAB_NS) {
 			status = 0;
 			continue;
-		}
-		else if (status)
+		} else if (status) {
 			break;
+		}
 	}
 
 	return status;

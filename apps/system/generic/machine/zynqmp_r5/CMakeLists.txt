@@ -15,11 +15,11 @@ get_filename_component(LIBXIL_LIB_DIR ${LIBXIL_LIB} DIRECTORY)
 collect(PROJECT_LIB_DIRS ${LIBXIL_LIB_DIR})
 
 # check PM API for certain headers and set client version based
-CHECK_SYMBOL_EXISTS(XPAR_XILPM_ENABLED "xparamaters.h" PM_FOUND)
+CHECK_SYMBOL_EXISTS(XPAR_XILPM_ENABLED "xparameters.h" PM_FOUND)
 if(PM_FOUND)
   find_library(HAS_PM_LIB NAMES xilpm PATHS ${CMAKE_FIND_ROOT_PATH})
   collect (PROJECT_LIB_DEPS xilpm)
-  CHECK_SYMBOL_EXISTS(versal "xparamaters.h" VERSION_2_PM_CLIENT)
+  CHECK_SYMBOL_EXISTS(versal "xparameters.h" VERSION_2_PM_CLIENT)
   if (VERSION_2_PM_CLIENT)
     collect (APP_EXTRA_C_FLAGS "  -DVERSION_2_PM_CLIENT ")
   else()

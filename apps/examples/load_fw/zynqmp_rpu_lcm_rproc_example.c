@@ -8,7 +8,6 @@
  */
 #include <common.h>
 
-
 static struct remoteproc *rpu_rproc_init(struct remoteproc *rproc,
 				 struct remoteproc_ops *ops, void *arg)
 {
@@ -16,11 +15,11 @@ static struct remoteproc *rpu_rproc_init(struct remoteproc *rproc,
 	unsigned int cpu_id = *((unsigned int *)arg);
 
 	if (cpu_id < NODE_RPU_0 || cpu_id > NODE_RPU_1) {
-		xil_printf("%s: invalide node id: %d\n\r", __func__, cpu_id);
+		LPERROR("%s: invalid node id: %d\n\r", __func__, cpu_id);
 		return NULL;
 	}
 
-	xil_printf("%s: node id: %d\n\r", __func__, cpu_id);
+	LPRINTF("%s: node id: %d\n\r", __func__, cpu_id);
 	priv = metal_allocate_memory(sizeof(*priv));
 	if (!priv)
 		return NULL;
@@ -36,12 +35,10 @@ static struct remoteproc *rpu_rproc_init(struct remoteproc *rproc,
 
 static void rpu_rproc_remove(struct remoteproc *rproc)
 {
-	if (rproc) {
-		struct rproc_priv *priv;
+	struct rproc_priv *priv;
 
-		priv = (struct rproc_priv *)rproc->priv;
-		metal_free_memory(priv);
-	}
+	priv = (struct rproc_priv *)rproc->priv;
+	metal_free_memory(priv);
 }
 
 static void *rpu_rproc_mmap(struct remoteproc *rproc,
@@ -51,11 +48,11 @@ static void *rpu_rproc_mmap(struct remoteproc *rproc,
 {
 	struct remoteproc_mem *mem;
 	struct rproc_priv *priv;
-	metal_phys_addr_t lpa, lda;
+	metal_phys_addr_t lpa, lda, lda_end;
 
 	priv = rproc->priv;
 
-	if (!da || !pa)
+	if ((!da || !pa) || (*da == METAL_BAD_PHYS && *pa == METAL_BAD_PHYS))
 		return NULL;
 	LPRINTF("%s: pa=0x%x, da=0x%x, size=0x%x, atrribute=0x%x\n\r",
 		__func__, *pa, *da, size, attribute);
@@ -63,7 +60,6 @@ static void *rpu_rproc_mmap(struct remoteproc *rproc,
 	lpa = *pa;
 	if (!attribute)
 		attribute = NORM_SHARED_NCACHE | PRIV_RW_USER_RW;
-	metal_phys_addr_t lda_end;
 
 	lda_end = lda + size;
 	/* call xilpm request node for relevant memory */
@@ -96,10 +92,6 @@ static void *rpu_rproc_mmap(struct remoteproc *rproc,
 		}
 	}
 
-	if (lpa == METAL_BAD_PHYS)
-		lpa = lda;
-	if (lpa == METAL_BAD_PHYS)
-		return NULL;
 	mem = metal_allocate_memory(sizeof(*mem));
 	if (!mem)
 		return NULL;
@@ -111,6 +103,11 @@ static void *rpu_rproc_mmap(struct remoteproc *rproc,
 		metal_free_memory(mem);
 		return NULL;
 	}
+
+        /* This code only runs on the R5, which has a flat memory
+         * space. Therefore, we use the same value for the physical
+         * and virtual addresses we pass in to metal_io_init().
+         */
 	metal_io_init(*io, (void *)mem->pa, &mem->pa, size,
 		      sizeof(metal_phys_addr_t)<<3, attribute, NULL);
 	mem->io = *io;
@@ -133,9 +130,8 @@ static int rpu_rproc_start(struct remoteproc *rproc)
 		LPRINTF("%s: Failed to start RPU 0x%x, ret=0x%x\n\r",
 			__func__, priv->cpu_id, ret);
 		return -1;
-	} else {
-		return 0;
 	}
+	return 0;
 }
 
 static int rpu_rproc_stop(struct remoteproc *rproc)
@@ -194,11 +190,10 @@ static int rpu_rproc_shutdown(struct remoteproc *rproc)
 	ret = XPm_ForcePowerDown(priv->cpu_id, REQUEST_ACK_NO);
 	if (ret != XST_SUCCESS)
 		return -1;
-	else
-		return 0;
+	return 0;
 }
 
-struct remoteproc_ops zynqmp_rpu_rproc_ops = { 
+struct remoteproc_ops zynqmp_rpu_rproc_ops = {
     .init = rpu_rproc_init,
     .remove = rpu_rproc_remove,
     .start = rpu_rproc_start,
