@@ -290,7 +290,7 @@ void kill_action_handler(int signum)
 	terminate_rpc_app();
 
 	if (rpdev)
-		platform_release_rpmsg_vdev(rpdev);
+		platform_release_rpmsg_vdev(rpdev, platform);
 	if (platform)
 		platform_cleanup(platform);
 }
@@ -363,7 +363,7 @@ int main(int argc, char *argv[])
 			ret = -1;
 		} else {
 			app(rpdev, platform);
-			platform_release_rpmsg_vdev(rpdev);
+			platform_release_rpmsg_vdev(rpdev, platform);
 			ret = 0;
 		}
 	}
