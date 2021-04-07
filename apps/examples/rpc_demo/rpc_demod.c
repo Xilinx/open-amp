@@ -249,7 +249,7 @@ static int rpmsg_endpoint_cb(struct rpmsg_endpoint *ept, void *data, size_t len,
 	if (len > RPC_BUFF_SIZE)
 		len = RPC_BUFF_SIZE;
 	ret = copy_from_shbuf(buf, data, len);
-	if (ret)
+	if (ret < 0)
 		return ret;
 
 	syscall = (struct rpmsg_rpc_syscall *)buf;
