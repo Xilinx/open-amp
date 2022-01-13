@@ -2,7 +2,7 @@
  * SPDX-License-Identifier: BSD-3-Clause
  */
 
-/* This is a sample demonstration application that showcases usage of proxy from the remote core. 
+/* This is a sample demonstration application that showcases usage of proxy from the remote core.
  This application is meant to run on the remote CPU running baremetal.
  This application can print to the master console and perform file I/O using proxy mechanism. */
 
@@ -58,7 +58,7 @@ int app(struct rpmsg_device *rdev, void *priv)
 			     priv, platform_poll, rpmsg_rpc_shutdown);
 	rpmsg_set_default_rpc(&rpc);
 	if (ret) {
-		LPRINTF("Failed to intialize rpmsg rpc\r\n");
+		LPRINTF("Failed to initialize rpmsg rpc\r\n");
 		return -1;
 	}
 
