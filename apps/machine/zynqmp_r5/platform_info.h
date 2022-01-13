@@ -12,6 +12,7 @@
 #include <openamp/remoteproc.h>
 #include <openamp/virtio.h>
 #include <openamp/rpmsg.h>
+#include <metal/log.h>
 
 #if defined __cplusplus
 extern "C" {
