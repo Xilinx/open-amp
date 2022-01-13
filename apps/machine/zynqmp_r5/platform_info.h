@@ -12,6 +12,7 @@
 #include <openamp/remoteproc.h>
 #include <openamp/virtio.h>
 #include <openamp/rpmsg.h>
+#include <metal/log.h>
 
 #if defined __cplusplus
 extern "C" {
@@ -59,7 +60,7 @@ struct remoteproc_priv {
  * It will initialize the platform.
  *
  * @argc: number of arguments
- * @argv: array of the input arguements
+ * @argv: array of the input arguments
  * @platform: pointer to store the platform data pointer
  *
  * return 0 for success or negative value for failure
