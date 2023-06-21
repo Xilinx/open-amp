@@ -26,13 +26,6 @@
 /* VirtIO rpmsg device id */
 #define VIRTIO_ID_RPMSG_             7
 
-/* Resource table entries */
-#define NUM_VRINGS                  0x02
-#define VRING_ALIGN                 0x1000
-#define RING_TX                     FW_RSC_U32_ADDR_ANY
-#define RING_RX                     FW_RSC_U32_ADDR_ANY
-#define VRING_SIZE                  256
-
 #define NUM_TABLE_ENTRIES           1
 
 

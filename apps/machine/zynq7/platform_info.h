@@ -1,6 +1,7 @@
 /*
  * Copyright (c) 2014, Mentor Graphics Corporation. All rights reserved.
  * Copyright (c) 2017 - 2018 Xilinx, Inc. All rights reserved.
+ * Copyright (c) 2022-2023 Advanced Micro Devices, Inc. All Rights Reserved.
  *
  * SPDX-License-Identifier: BSD-3-Clause
  */
@@ -12,6 +13,7 @@
 #include <openamp/virtio.h>
 #include <openamp/rpmsg.h>
 #include <metal/log.h>
+#include <xparameters.h>
 
 #if defined __cplusplus
 extern "C" {
@@ -34,6 +36,24 @@ extern "C" {
 
 /* Zynq CPU ID mask */
 #define ZYNQ_CPU_ID_MASK 0x1UL
+
+/* Another APU core ID. In this demo, the other APU core is 0. */
+#define A9_CPU_ID	0UL
+
+/* scugic device, used to raise soft irq */
+#define SCUGIC_DEV_NAME	"scugic_dev"
+#define SCUGIC_BUS_NAME	"generic"
+
+/* scugic base address */
+#define SCUGIC_PERIPH_BASE	0xF8F00000
+#define SCUGIC_DIST_BASE	(SCUGIC_PERIPH_BASE + 0x00001000)
+
+/* Resource table entries */
+#define NUM_VRINGS                  0x02
+#define VRING_ALIGN                 0x1000
+#define RING_TX                     FW_RSC_U32_ADDR_ANY
+#define RING_RX                     FW_RSC_U32_ADDR_ANY
+#define VRING_SIZE                  256
 
 /* Remoteproc private data struct */
 struct remoteproc_priv {
