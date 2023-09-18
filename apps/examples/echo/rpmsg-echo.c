@@ -17,13 +17,14 @@
 #include "platform_info.h"
 #include "rpmsg-echo.h"
 
-#define SHUTDOWN_MSG	0xEF56A55A
-
 #define LPRINTF(fmt, ...) printf("%s():%u " fmt, __func__, __LINE__, ##__VA_ARGS__)
 #define LPERROR(fmt, ...) LPRINTF("ERROR: " fmt, ##__VA_ARGS__)
 
-static struct rpmsg_endpoint lept;
-static int shutdown_req = 0;
+#define U_BOOT_EPT 1035
+#define U_BOOT_RPMSG_CHANNEL "U-Boot-rpmsg"
+#define RPMSG_CLIENT_SAMPLE_CH "rpmsg-client-sample"
+
+static struct rpmsg_endpoint lept, uboot_ept, rpcs_ept;
 
 /*-----------------------------------------------------------------------------*
  *  RPMSG endpoint callbacks
@@ -33,13 +34,6 @@ static int rpmsg_endpoint_cb(struct rpmsg_endpoint *ept, void *data, size_t len,
 {
 	(void)priv;
 	(void)src;
-
-	/* On reception of a shutdown we signal the application to terminate */
-	if ((*(unsigned int *)data) == SHUTDOWN_MSG) {
-		ML_INFO("shutdown message is received.\r\n");
-		shutdown_req = 1;
-		return RPMSG_SUCCESS;
-	}
 
 	/* Send data back to host */
 	if (rpmsg_send(ept, data, len) < 0) {
@@ -51,8 +45,8 @@ static int rpmsg_endpoint_cb(struct rpmsg_endpoint *ept, void *data, size_t len,
 static void rpmsg_service_unbind(struct rpmsg_endpoint *ept)
 {
 	(void)ept;
-	ML_INFO("unexpected Remote endpoint destroy\r\n");
-	shutdown_req = 1;
+	ML_INFO("ept %s, src=0x%x, dst=0x%x, destroyed by host\r\n",
+		ept->name, ept->addr, ept->dest_addr);
 }
 
 /*-----------------------------------------------------------------------------*
@@ -63,8 +57,38 @@ int app(struct rpmsg_device *rdev, void *priv)
 	int ret;
 
 	/* Initialize RPMSG framework */
-	ML_INFO("Try to create rpmsg endpoint.\r\n");
+	ML_INFO("Try to create rpmsg endpoints.\r\n");
 
+	/*
+	 * Initially U-Boot tx/rx over fix endpoint.
+	 * Initial implementation of rpmsg in U-boot is expecting fix endpoint
+	 * This will be changed in future when name-service support will be
+	 * added in U-Boot. Till that time maintain this fix endpoint channel.
+	 */
+	ret = rpmsg_create_ept(&uboot_ept, rdev, U_BOOT_RPMSG_CHANNEL,
+			       U_BOOT_EPT, U_BOOT_EPT,
+			       rpmsg_endpoint_cb,
+			       rpmsg_service_unbind);
+	if (ret) {
+		ML_ERR("Failed to create %s endpoint.\r\n", U_BOOT_RPMSG_CHANNEL);
+		return -1;
+	}
+
+	/*
+	 * create endpoint to communicate with rpmsg-client-sample driver
+	 * This channel communicate with rpmsg-client-sample driver in
+	 * linux kernel.
+	 */
+	ret = rpmsg_create_ept(&rpcs_ept, rdev, RPMSG_CLIENT_SAMPLE_CH,
+			       RPMSG_ADDR_ANY, RPMSG_ADDR_ANY,
+			       rpmsg_endpoint_cb,
+			       rpmsg_service_unbind);
+	if (ret) {
+		ML_ERR("Failed to create %s endpoint.\r\n", RPMSG_CLIENT_SAMPLE_CH);
+		return -1;
+	}
+
+	/* create endpoint to communicate with echo_test app */
 	ret = rpmsg_create_ept(&lept, rdev, RPMSG_SERVICE_NAME,
 			       RPMSG_ADDR_ANY, RPMSG_ADDR_ANY,
 			       rpmsg_endpoint_cb,
@@ -75,17 +99,9 @@ int app(struct rpmsg_device *rdev, void *priv)
 	}
 
 	ML_INFO("Successfully created rpmsg endpoint.\r\n");
-	while(1) {
-		platform_poll(priv);
-		/* we got a shutdown request, exit */
-		if (shutdown_req) {
-			break;
-		}
-	}
-	ML_DBG("done\r\n");
-	rpmsg_destroy_ept(&lept);
+	ret = platform_poll_on_vdev_reset(rdev, priv);
 
-	return 0;
+	return ret;
 }
 
 /*-----------------------------------------------------------------------------*
@@ -114,23 +130,45 @@ int main(int argc, char *argv[])
 	ret = platform_init(argc, argv, &platform);
 	if (ret) {
 		LPERROR("Failed to initialize platform.\r\n");
-		ret = -1;
-	} else {
+		ML_ERR("RPU reboot is required to recover\r\n");
+		platform_cleanup(platform);
+		/*
+		 * If main function is returned in baremetal firmware,
+		 * RPU behavior is undefined. It's better to wait in
+		 * an infinite loop instead
+		 */
+		while (1)
+			;
+	}
+
+	/*
+	 * If host detach from remoteproc device, then destroy current rpmsg
+	 * device and create new one.
+	 */
+	while (1) {
 		rpdev = platform_create_rpmsg_vdev(platform, 0,
 						   VIRTIO_DEV_DEVICE,
 						   NULL, NULL);
 		if (!rpdev) {
 			ML_ERR("Failed to create rpmsg virtio device.\r\n");
-			ret = -1;
-		} else {
-			app(rpdev, platform);
-			platform_release_rpmsg_vdev(rpdev, platform);
-			ret = 0;
+			ML_ERR("RPU reboot is required to recover\r\n");
+			platform_cleanup(platform);
+
+			/*
+			 * If main function is returned in baremetal firmware,
+			 * RPU behavior is undefined. It's better to wait in
+			 * an infinite loop instead
+			 */
+			while (1)
+				;
 		}
+
+		app(rpdev, platform);
+		platform_release_rpmsg_vdev(rpdev, platform);
 	}
 
+	/* Never reach here. */
 	ML_INFO("Stopping application...\r\n");
-	platform_cleanup(platform);
 
-	return ret;
+	return -EINVAL;
 }
