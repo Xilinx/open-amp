@@ -1,8 +1,8 @@
 /*
  * Copyright (c) 2014, Mentor Graphics Corporation
  * All rights reserved.
- * Copyright (c) 2021 Xilinx, Inc.
- * Copyright (c) 2022-2023 Advanced Micro Devices, Inc. All Rights Reserved.
+ * Copyright (c) 2021-2022 Xilinx, Inc. All rights reserved.
+ * Copyright (c) 2022-2023 Advanced Micro Devices, Inc. All rights reserved.
  *
  * SPDX-License-Identifier: BSD-3-Clause
  */
@@ -226,6 +226,45 @@ err2:
 err1:
 	metal_free_memory(rpmsg_vdev);
 	return NULL;
+}
+
+int platform_poll_on_vdev_reset(struct rpmsg_device *rpdev, void *priv)
+{
+	struct rpmsg_virtio_device *rvdev;
+	struct remoteproc *rproc = priv;
+	struct remoteproc_priv *prproc;
+	unsigned int flags;
+
+	if (!priv || !rpdev)
+		return -EINVAL;
+
+	prproc = rproc->priv;
+	if (!prproc)
+		return -EINVAL;
+
+	rvdev = metal_container_of(rpdev, struct rpmsg_virtio_device, rdev);
+
+	/**
+	 * Check virtio status after every interrupt. In case of stop or
+	 * detach, virtio device status will be reset by remote
+	 * processor. In that case, break loop and destroy rvdev
+	 */
+	while (rpmsg_virtio_get_status(rvdev)) {
+#ifdef RPMSG_NO_IPI
+		(void)flags;
+		if (metal_io_read32(prproc->kick_io, 0))
+			remoteproc_get_notification(rproc, RSC_NOTIFY_ID_ANY);
+#else /* !RPMSG_NO_IPI */
+		flags = metal_irq_save_disable();
+		if (!(atomic_flag_test_and_set(&prproc->ipi_nokick))) {
+			metal_irq_restore_enable(flags);
+			remoteproc_get_notification(rproc, RSC_NOTIFY_ID_ANY);
+		}
+		_rproc_wait();
+		metal_irq_restore_enable(flags);
+#endif /* RPMSG_NO_IPI */
+	}
+	return 0;
 }
 
 int platform_poll(void *priv)

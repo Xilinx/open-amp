@@ -1,6 +1,6 @@
 /*
- * Copyright (c) 2016 Xilinx, Inc. All rights reserved.
- * Copyright (c) 2022-2023 Advanced Micro Devices, Inc. All Rights Reserved.
+ * Copyright (c) 2016-2022 Xilinx, Inc. All rights reserved.
+ * Copyright (c) 2022-2023 Advanced Micro Devices, Inc. All rights reserved.
  *
  * SPDX-License-Identifier: BSD-3-Clause
  */
@@ -187,6 +187,7 @@ platform_create_rpmsg_vdev(void *platform, unsigned int vdev_index,
  * return negative value for errors, otherwise 0.
  */
 int platform_poll(void *platform);
+int platform_poll_on_vdev_reset(struct rpmsg_device *rpdev, void *priv);
 
 /**
  * platform_release_rpmsg_vdev - release rpmsg virtio device
