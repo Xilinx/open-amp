@@ -19,6 +19,25 @@
 extern "C" {
 #endif
 
+#ifdef _amd_generated_
+/*
+ * @file   amd_platform_info.h
+ * @brief  generated header that contains openamp ipc information.
+ *
+ *         namely interrupt and shared memory information. if values are
+ *	   provided via generated header, then include thus. these values
+ *	   are to describe interrupt and shared memory information that
+ *	   describes one end of an openamp ipc connection. this application
+ *	   is for target amd a9s. the file 'amd_ platform_info.h ' is
+ *	   generated via lopper or system device tree flow for amd a9
+ *	   targets and contains openamp ipc information such as interrupt
+ *	   and shared memory values. the ipc channel information is in the
+ *	   openamp yaml channel description. edit the yaml to change the
+ *	   generated values in amd_ platform_info.h
+ */
+#include "amd_platform_info.h"
+#else
+
 /* SGIs */
 #define SGI_TO_NOTIFY		15 /* SGI to notify the remote */
 #define SGI_NOTIFICATION	14 /* SGI from the remote */
@@ -54,6 +73,8 @@ extern "C" {
 #define RING_TX                     FW_RSC_U32_ADDR_ANY
 #define RING_RX                     FW_RSC_U32_ADDR_ANY
 #define VRING_SIZE                  256
+
+#endif /* _AMD_GENERATED_ */
 
 /* Remoteproc private data struct */
 struct remoteproc_priv {
