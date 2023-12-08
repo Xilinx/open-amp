@@ -139,5 +139,9 @@ if (DEFINED RPMSG_BUFFER_SIZE)
 endif (DEFINED RPMSG_BUFFER_SIZE)
 
 option (WITH_DOC "Build with documentation" OFF)
+option (WITH_FUNC_LINE_LOG "Log with function name, line number prefix" ON)
+if (WITH_FUNC_LINE_LOG)
+  add_definitions (-DML_FUNC_LINE)
+endif (WITH_FUNC_LINE_LOG)
 
 message ("-- C_FLAGS : ${CMAKE_C_FLAGS}")
