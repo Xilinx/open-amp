@@ -2,7 +2,7 @@
  * Copyright (c) 2014, Mentor Graphics Corporation
  * All rights reserved.
  * Copyright (c) 2017-2022 Xilinx, Inc. All rights reserved.
- * Copyright (c) 2022-2023 Advanced Micro Devices, Inc. All rights reserved.
+ * Copyright (c) 2022-2024 Advanced Micro Devices, Inc. All rights reserved.
  *
  * SPDX-License-Identifier: BSD-3-Clause
  */
@@ -16,16 +16,13 @@
 #include <metal/log.h>
 #include "xparameters.h"
 
+#ifdef SDT
+#include "bspconfig.h" /* This provides SOC symbols. */
+#endif
+
 #if defined __cplusplus
 extern "C" {
 #endif
-
-/* Cortex R5 memory attributes */
-#define DEVICE_SHARED       0x00000001U /* device, shareable */
-#define DEVICE_NONSHARED    0x00000010U /* device, non shareable */
-#define NORM_NSHARED_NCACHE 0x00000008U /* Non cacheable  non shareable */
-#define NORM_SHARED_NCACHE  0x0000000CU /* Non cacheable shareable */
-#define PRIV_RW_USER_RW     (0x00000003U<<8U) /* Full Access */
 
 #ifdef _AMD_GENERATED_
 /*
@@ -46,36 +43,15 @@ extern "C" {
 #else
 
 /* Interrupt vectors */
-#ifdef versal
-
-#ifndef IPI_IRQ_VECT_ID
-#define IPI_IRQ_VECT_ID     63
-#endif /* !IPI_IRQ_VECT_ID */
-
-#ifndef POLL_BASE_ADDR
-#define POLL_BASE_ADDR       0xFF340000 /* IPI base address*/
-#endif /* !POLL_BASE_ADDR */
-
-#ifndef IPI_CHN_BITMASK
-#define IPI_CHN_BITMASK     0x0000020 /* IPI channel bit mask for IPI from/to
-					   APU */
-#endif /* !IPI_CHN_BITMASK */
-
+#ifdef VERSAL_NET
+#include "platform_info_versal_net.h"
+#elif defined(versal)
+#include "platform_info_versal.h"
+#elif defined(PLATFORM_ZYNQMP)
+#include "platform_info_zynqmp.h"
 #else
-
-#ifndef IPI_IRQ_VECT_ID
-#define IPI_IRQ_VECT_ID     XPAR_XIPIPSU_0_INT_ID
-#endif /* !IPI_IRQ_VECT_ID */
-
-#ifndef POLL_BASE_ADDR
-#define POLL_BASE_ADDR      XPAR_XIPIPSU_0_BASE_ADDRESS
-#endif /* !POLL_BASE_ADDR */
-
-#ifndef IPI_CHN_BITMASK
-#define IPI_CHN_BITMASK     0x01000000
-#endif /* !IPI_CHN_BITMASK */
-
-#endif /* versal */
+#error "unknown platform"
+#endif
 
 #ifdef RPMSG_NO_IPI
 #undef POLL_BASE_ADDR
