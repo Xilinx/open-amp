@@ -32,6 +32,9 @@ SECTIONS
 } > psx_r52_atcm_MEM_0
 
 .bootdata : {
+    _TCM_A_REGION = .;    LONG(0x0)
+    _TCM_B_REGION = .;    LONG(0x10001)
+    _TCM_C_REGION = .;    LONG(0x18001)
    *(.bootdata)
 } > psx_r52_atcm_MEM_0
 
