@@ -23,7 +23,7 @@
 #endif /* !IPI_CHN_BITMASK */
 #else /* RPU 1 case */
 #ifndef IPI_CHN_BITMASK
-#define IPI_CHN_BITMASK     XPAR_IPI1_8_IPI_BITMASK
+#define IPI_CHN_BITMASK     XPAR_IPI2_8_IPI_BITMASK
 #endif /* !IPI_CHN_BITMASK */
 #endif
 
