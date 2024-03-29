@@ -9,15 +9,46 @@
 
 #ifdef SDT
 
+/* In case BSP does not provide symbol */
+#ifndef XPAR_XIPIPSU_0_BASEADDR
+
+#if XPAR_CPU_ID == 0
+#define XPAR_XIPIPSU_0_BASEADDR 0xff310000
+#else
+#define XPAR_XIPIPSU_0_BASEADDR 0xff320000
+#endif /* XPAR_CPU_ID == 0 */
+
+#endif /* !XPAR_XIPIPSU_0_BASEADDR */
+
 #ifndef POLL_BASE_ADDR
 #define POLL_BASE_ADDR XPAR_XIPIPSU_0_BASEADDR
 #endif /* !POLL_BASE_ADDR */
+
+/* In case BSP does not provide symbol */
+#ifndef XPAR_XIPIPSU_0_INTR
+
+#if XPAR_CPU_ID == 0
+#define XPAR_XIPIPSU_0_INTR 0x41
+#else
+#define XPAR_XIPIPSU_0_INTR 0x42
+#endif /* XPAR_CPU_ID == 0 */
+
+#endif /* !XPAR_XIPIPSU_0_INTR */
 
 #ifndef IPI_IRQ_VECT_ID
 #define IPI_IRQ_VECT_ID	(XPAR_XIPIPSU_0_INTR + 32U)
 #endif /* !IPI_IRQ_VECT_ID */
 
 #if XPAR_CPU_ID == 0
+
+#ifndef XPAR_IPI1_7_IPI_BITMASK
+#define XPAR_IPI1_7_IPI_BITMASK 0x01000000
+#endif /* !XPAR_IPI1_7_IPI_BITMASK */
+
+#ifndef XPAR_IPI2_8_IPI_BITMASK
+#define XPAR_IPI2_8_IPI_BITMASK 0x02000000
+#endif /* !XPAR_IPI2_8_IPI_BITMASK */
+
 #ifndef IPI_CHN_BITMASK
 #define IPI_CHN_BITMASK     XPAR_IPI1_7_IPI_BITMASK
 #endif /* !IPI_CHN_BITMASK */
