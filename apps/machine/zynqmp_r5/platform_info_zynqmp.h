@@ -14,7 +14,7 @@
 
 #if XPAR_CPU_ID == 0
 #define XPAR_XIPIPSU_0_BASEADDR 0xff310000
-#else
+#else /* RPU 1 case */
 #define XPAR_XIPIPSU_0_BASEADDR 0xff320000
 #endif /* XPAR_CPU_ID == 0 */
 
@@ -29,7 +29,7 @@
 
 #if XPAR_CPU_ID == 0
 #define XPAR_XIPIPSU_0_INTR 0x41
-#else
+#else /* RPU 1 case */
 #define XPAR_XIPIPSU_0_INTR 0x42
 #endif /* XPAR_CPU_ID == 0 */
 
@@ -39,24 +39,27 @@
 #define IPI_IRQ_VECT_ID	(XPAR_XIPIPSU_0_INTR + 32U)
 #endif /* !IPI_IRQ_VECT_ID */
 
+#ifndef IPI_CHN_BITMASK
+
 #if XPAR_CPU_ID == 0
 
 #ifndef XPAR_IPI1_7_IPI_BITMASK
 #define XPAR_IPI1_7_IPI_BITMASK 0x01000000
 #endif /* !XPAR_IPI1_7_IPI_BITMASK */
 
+#define IPI_CHN_BITMASK     XPAR_IPI1_7_IPI_BITMASK
+
+#else /* RPU 1 case */
+
 #ifndef XPAR_IPI2_8_IPI_BITMASK
 #define XPAR_IPI2_8_IPI_BITMASK 0x02000000
 #endif /* !XPAR_IPI2_8_IPI_BITMASK */
 
-#ifndef IPI_CHN_BITMASK
-#define IPI_CHN_BITMASK     XPAR_IPI1_7_IPI_BITMASK
-#endif /* !IPI_CHN_BITMASK */
-#else /* RPU 1 case */
-#ifndef IPI_CHN_BITMASK
 #define IPI_CHN_BITMASK     XPAR_IPI2_8_IPI_BITMASK
+
+#endif /* XPAR_CPU_ID == 0 */
+
 #endif /* !IPI_CHN_BITMASK */
-#endif
 
 #else /* Vitis Classic Case */
 
@@ -69,13 +72,17 @@
 #endif /* !POLL_BASE_ADDR */
 
 #if XPAR_CPU_ID == 0
+
 #ifndef IPI_CHN_BITMASK
 #define IPI_CHN_BITMASK     0x01000000
 #endif /* !IPI_CHN_BITMASK */
+
 #else /* RPU1 */
+
 #ifndef IPI_CHN_BITMASK
 #define IPI_CHN_BITMASK     0x02000000
 #endif /* !IPI_CHN_BITMASK */
+
 #endif /* XPAR_CPU_ID == 0 */
 
 #endif /* SDT */
