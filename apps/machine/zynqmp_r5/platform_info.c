@@ -29,6 +29,10 @@
 #include "platform_info.h"
 #include "rsc_table.h"
 
+#ifdef DEBUG_INFO
+#include "debug_info.h"
+#endif /* DEBUG_INFO */
+
 #define KICK_DEV_NAME         "poll_dev"
 #define KICK_BUS_NAME         "generic"
 
@@ -158,6 +162,10 @@ int platform_init(int argc, char *argv[], void **platform)
 	if (argc >= 3) {
 		rsc_id = strtoul(argv[2], NULL, 0);
 	}
+
+#ifdef DEBUG_INFO
+	debug_info();
+#endif /* DEBUG_INFO */
 
 	ML_INFO("platform_create_proc()\r\n");
 	rproc = platform_create_proc(proc_id, rsc_id);
