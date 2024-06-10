@@ -16,7 +16,11 @@
  **************************************************************************/
 
 #include "debug_info.h"
-#include "platform_info.h"
+#include "platform_info_zynqmp.h"
+
+#ifdef SDT
+#include "bspconfig.h"
+#endif
 
 #if defined(PLATFORM_ZYNQMP) && defined(DEBUG_INFO)
 const struct xlnx_ipi_reg_info ipi_agent_info[] = {
