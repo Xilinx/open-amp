@@ -62,7 +62,7 @@ const struct xlnx_ipi_reg_info ipi_agent_info[] = {
 	},
 };
 
-int get_ipi_msg_buf(int src, int dst)
+int get_ipi_msg_buf(unsigned int src, unsigned int dst)
 {
 	return IPI_BUFFER_BASEADDR +
 		src * SRC_AGENT_OFFSET +

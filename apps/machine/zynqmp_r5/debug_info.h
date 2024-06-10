@@ -48,6 +48,6 @@ void debug_info(void);
  * Note that for some SOC's there are bufferless IPI's. In that case
  * the routine will return 0.
  */
-int get_ipi_msg_buf(int src, int dst);
+int get_ipi_msg_buf(unsigned int src, unsigned int dst);
 
 #endif /* DEBUG_INFO_H_ */

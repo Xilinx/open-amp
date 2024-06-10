@@ -25,7 +25,7 @@
 
 /* These routines are set by plat_<SOC>.c */
 extern const struct xlnx_ipi_reg_info ipi_agent_info[];
-extern int get_ipi_msg_buf(int src, int dst);
+extern int get_ipi_msg_buf(unsigned int src, unsigned int dst);
 
 /**
  * @brief Ensure IPI are valid for app and set host and remote IPI
