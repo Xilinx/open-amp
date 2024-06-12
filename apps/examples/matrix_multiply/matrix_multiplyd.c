@@ -118,39 +118,3 @@ int app(struct rpmsg_device *rdev, void *priv)
 
 	return 0;
 }
-
-/*-----------------------------------------------------------------------------*
- *  Application entry point
- *-----------------------------------------------------------------------------*/
-int main(int argc, char *argv[])
-{
-	void *platform;
-	struct rpmsg_device *rpdev;
-	int ret;
-
-	LPRINTF("Starting application...\r\n");
-
-	/* Initialize platform */
-	ret = platform_init(argc, argv, &platform);
-	if (ret) {
-		LPERROR("Failed to initialize platform.\r\n");
-		ret = -1;
-	} else {
-		rpdev = platform_create_rpmsg_vdev(platform, 0,
-						   VIRTIO_DEV_DEVICE,
-						   NULL, NULL);
-		if (!rpdev) {
-			ML_ERR("Failed to create rpmsg virtio device.\r\n");
-			ret = -1;
-		} else {
-			app(rpdev, platform);
-			platform_release_rpmsg_vdev(rpdev, platform);
-			ret = 0;
-		}
-	}
-
-	ML_INFO("Stopping application...\r\n");
-	platform_cleanup(platform);
-
-	return ret;
-}

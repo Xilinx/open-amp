@@ -1,3 +1,3 @@
 include(CheckSymbolExists)
 
-collect (APP_COMMON_SOURCES helper.c)
+collect (APP_COMMON_SOURCES gic_init.c)
