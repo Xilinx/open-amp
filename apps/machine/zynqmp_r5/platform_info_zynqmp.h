@@ -82,7 +82,7 @@
 #endif /* !XPAR_XIPIPSU_0_INTR */
 
 #ifndef IPI_IRQ_VECT_ID
-#define IPI_IRQ_VECT_ID	(XPAR_XIPIPSU_0_INTR + 32U)
+#define IPI_IRQ_VECT_ID	(XPAR_XIPIPSU_0_INTR)
 #endif /* !IPI_IRQ_VECT_ID */
 
 #ifndef IPI_CHN_BITMASK

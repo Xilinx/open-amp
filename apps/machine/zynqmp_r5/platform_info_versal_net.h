@@ -7,6 +7,8 @@
 #ifndef PLATFORM_INFO_VERSAL_NET_H_
 #define PLATFORM_INFO_VERSAL_NET_H_
 
+#include <metal/sys.h>
+
 #define SOC_STR		"VERSAL-NET"
 
 /* IPI agent IDs macros */
@@ -62,7 +64,11 @@
 #define	IPI_BUFFER_BASEADDR	0xEB3F0000U
 
 #ifndef IPI_IRQ_VECT_ID
+#ifdef USE_FREERTOS
+#define IPI_IRQ_VECT_ID    (IPI_VECT_ID_IPI1 - 32U)
+#else /* Default is baremetal */
 #define	IPI_IRQ_VECT_ID     IPI_VECT_ID_IPI1
+#endif /* USE_FREERTOS */
 #endif /* !IPI_IRQ_VECT_ID */
 
 #ifndef POLL_BASE_ADDR
