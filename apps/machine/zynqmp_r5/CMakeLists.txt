@@ -12,3 +12,15 @@ collect (APP_COMMON_SOURCES debug_info.c)
 
 collect (APP_INC_DIRS "${CMAKE_CURRENT_SOURCE_DIR}")
 
+find_path(XIL_INCLUDE_DIR NAMES xparameters.h PATHS ${CMAKE_FIND_ROOT_PATH})
+collect (PROJECT_INC_DIRS "${XIL_INCLUDE_DIR}")
+
+find_library(LIBXIL_LIB NAMES xil PATHS ${CMAKE_FIND_ROOT_PATH})
+get_filename_component(LIBXIL_LIB_DIR ${LIBXIL_LIB} DIRECTORY)
+collect(PROJECT_LIB_DIRS ${LIBXIL_LIB_DIR})
+
+# libxil provides AMD-Xilinx BSP APIs to access Xilinx hardware.
+collect(PROJECT_LIB_DEPS xil)
+
+# C standard library
+collect(PROJECT_LIB_DEPS c)
