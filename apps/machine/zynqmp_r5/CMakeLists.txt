@@ -40,6 +40,11 @@ set (LOPPER_CFG_LINKERS lscript_r5.ld.in lscript_versal_r5.ld.in lscript_versal_
 list(FIND SOCS ${SOC} soc_index)
 
 if (HAS_SYSTEM_DT)
+  # Xilinx-AMD SDT workflow has split up libxil. Below are required libs
+  # That were previously in libxil.
+  collect(PROJECT_LIB_DEPS xiltimer)
+  collect(PROJECT_LIB_DEPS xilstandalone)
+
   if (EXISTS ${LINKER_METADATA_FILE})
     include(${LINKER_METADATA_FILE})
     list (GET LOPPER_CFG_LINKERS ${soc_index} linker_in)
