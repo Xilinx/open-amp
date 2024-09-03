@@ -25,7 +25,7 @@
 #define LPRINTF(format, ...) xil_printf(format, ##__VA_ARGS__)
 #define LPERROR(format, ...) LPRINTF("ERROR: " format, ##__VA_ARGS__)
 
-static TaskHandle_t comm_task;
+TaskHandle_t rpmsg_task;
 
 /* RPMsg Task */
 static void rpmsg_listen_task(void *unused_arg)
@@ -92,7 +92,7 @@ int main(void)
 
 	/* Create the tasks */
 	stat = xTaskCreate(rpmsg_listen_task, (const char *)"RPMsg task", 1024, NULL, 2,
-			   &comm_task);
+			   &rpmsg_task);
 	if (stat != pdPASS) {
 		LPERROR("cannot create task\r\n");
 		while(1);

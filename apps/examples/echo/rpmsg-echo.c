@@ -26,6 +26,10 @@
 
 static struct rpmsg_endpoint lept, uboot_ept, rpcs_ept;
 
+#ifdef USE_FREERTOS
+extern TaskHandle_t rpmsg_task;
+#endif /* USE_FREERTOS */
+
 /*-----------------------------------------------------------------------------*
  *  RPMSG endpoint callbacks
  *-----------------------------------------------------------------------------*/
@@ -39,6 +43,9 @@ static int rpmsg_endpoint_cb(struct rpmsg_endpoint *ept, void *data, size_t len,
 	if (rpmsg_send(ept, data, len) < 0) {
 		ML_ERR("rpmsg_send failed\r\n");
 	}
+#ifdef USE_FREERTOS
+	xTaskResumeFromISR(rpmsg_task);
+#endif /* USE_FREERTOS */
 	return RPMSG_SUCCESS;
 }
 
