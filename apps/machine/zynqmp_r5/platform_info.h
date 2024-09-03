@@ -144,6 +144,12 @@ platform_create_rpmsg_vdev(void *platform, unsigned int vdev_index,
  */
 int platform_poll(void *platform);
 int platform_poll_on_vdev_reset(struct rpmsg_device *rpdev, void *priv);
+int platform_poll_for_rpc(void *arg);
+
+struct rproc_plat_info {
+	struct rpmsg_device *rpdev;
+	struct remoteproc *rproc;
+};
 
 /**
  * platform_release_rpmsg_vdev - release rpmsg virtio device

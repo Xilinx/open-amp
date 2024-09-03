@@ -107,14 +107,7 @@ int app(struct rpmsg_device *rdev, void *priv)
 	}
 
 	ML_INFO("Waiting for events...\r\n");
-	while(1) {
-		platform_poll(priv);
-		/* we got a shutdown request, exit */
-		if (shutdown_req) {
-			break;
-		}
-	}
-	rpmsg_destroy_ept(&lept);
+	ret = platform_poll_on_vdev_reset(rdev, priv);
 
-	return 0;
+	return ret;
 }

@@ -22,6 +22,7 @@ static void rpmsg_listen_task(void *unused_arg)
 {
 	void *platform;
 	struct rpmsg_device *rpdev;
+	int ret;
 
 	(void)(int *)unused_arg;
 
@@ -39,23 +40,45 @@ static void rpmsg_listen_task(void *unused_arg)
 	LPRINTF("Starting application...\r\n");
 
 	/* Initialize platform */
-	if (platform_init(0, NULL, &platform)) {
+	ret = platform_init(0, NULL, &platform);
+	if (ret) {
 		LPERROR("Failed to initialize platform.\r\n");
-	} else {
+		ML_ERR("RPU reboot is required to recover\r\n");
+		platform_cleanup(platform);
+		/*
+		 * If main function is returned in baremetal firmware,
+		 * RPU behavior is undefined. It's better to wait in
+		 * an infinite loop instead
+		 */
+		while (1)
+			;
+	}
+
+	/*
+	 * If host detach from remoteproc device, then destroy current rpmsg
+	 * device and create new one.
+	 */
+	while (1) {
 		rpdev = platform_create_rpmsg_vdev(platform, 0,
 						   VIRTIO_DEV_DEVICE,
 						   NULL, NULL);
 		if (!rpdev) {
 			ML_ERR("Failed to create rpmsg virtio device.\r\n");
-		} else {
-			app(rpdev, platform);
-			platform_release_rpmsg_vdev(rpdev, platform);
+			ML_ERR("RPU reboot is required to recover\r\n");
+			platform_cleanup(platform);
+
+			/*
+			 * If main function is returned in baremetal firmware,
+			 * RPU behavior is undefined. It's better to wait in
+			 * an infinite loop instead
+			 */
+			while (1)
+				;
 		}
+
+		app(rpdev, platform);
+		platform_release_rpmsg_vdev(rpdev, platform);
 	}
-
-	ML_INFO("Stopping application...\r\n");
-	platform_cleanup(platform);
-
 	/* Terminate this task */
 	vTaskDelete(NULL);
 }

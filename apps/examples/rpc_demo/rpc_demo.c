@@ -47,6 +47,7 @@ int app(struct rpmsg_device *rdev, void *priv)
 	struct rpmsg_rpc_syscall rpccall;
 	int fd, bytes_written, bytes_read;
 	char fname[] = "remote.file";
+	struct rproc_plat_info arg;
 	char wbuff[50];
 	char rbuff[1024];
 	char ubuff[50];
@@ -54,11 +55,15 @@ int app(struct rpmsg_device *rdev, void *priv)
 	int idata;
 	int ret;
 
+	arg.rpdev = rdev;
+	arg.rproc = priv;
+
 	/* redirect I/Os */
 	LPRINTF("Initializating I/Os redirection...\r\n");
 	ret = rpmsg_rpc_init(&rpc, rdev, RPMSG_SERVICE_NAME,
 			     RPMSG_ADDR_ANY, RPMSG_ADDR_ANY,
-			     priv, platform_poll, rpmsg_rpc_shutdown);
+			     &arg, platform_poll_for_rpc,
+			     rpmsg_rpc_shutdown);
 	rpmsg_set_default_rpc(&rpc);
 	if (ret) {
 		LPRINTF("Failed to initialize rpmsg rpc\r\n");
@@ -136,5 +141,6 @@ int app(struct rpmsg_device *rdev, void *priv)
 
 	LPRINTF("Release remoteproc procedure call\r\n");
 	rpmsg_rpc_release(&rpc);
+	platform_poll_for_rpc(&arg);
 	return 0;
 }
